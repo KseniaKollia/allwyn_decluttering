@@ -111,7 +111,7 @@ st.markdown("---")
 # ---------------------------------------------------------
 st.sidebar.header("🎯 Filters")
 
-# 1. Φίλτρο Μήνα
+# 1. Φίλτρο Μήνα (Ταξινομημένα χρονολογικά)
 if "DATE_DT" in df_opap.columns and not df_opap["DATE_DT"].dropna().empty:
     df_months = df_opap.dropna(subset=["DATE_DT"]).sort_values("DATE_DT")
     months_order = df_months["MONTH"].unique().tolist()
@@ -126,7 +126,7 @@ if selected_months:
 else:
     df_month_filtered = df_opap.copy()
 
-# 2. Φίλτρο Εβδομάδας
+# 2. Φίλτρο Εβδομάδας (Εμφανίζει ΑΠΟΚΛΕΙΣΤΙΚΑ τις εβδομάδες των επιλεγμένων μηνών)
 if "WEEK_NUM" in df_month_filtered.columns:
     available_weeks = sorted([int(x) for x in df_month_filtered["WEEK_NUM"].dropna().unique()])
 else:
@@ -141,20 +141,26 @@ else:
     df_filtered = df_month_filtered.copy()
 
 # ---------------------------------------------------------
-# 6. ΔΙΑΓΡΑΜΜΑ 1: NETWORK COVERAGE (TOTAL DEFAULT OR FILTERED)
+# 6. ΔΙΑΓΡΑΜΜΑ 1: NETWORK COVERAGE (ΜΕ ΒΑΣΗ ΤΗΝ ΤΕΛΕΥΤΑΙΑ ΚΑΤΑΓΡΑΦΗ ΑΝΑ ID)
 # ---------------------------------------------------------
 st.subheader("NETWORK COVERAGE")
 
 if not df_filtered.empty:
-    # 1. Total Active IDs από το STORE STATUS sheet
+    # 1. Total Active IDs
     if "ACTIVITY" in df_stores.columns:
         total_active_ids = len(df_stores[df_stores["ACTIVITY"].astype(str).str.upper() == "ACTIVE"]["ID"].unique())
     else:
         total_active_ids = len(df_opap["ID"].unique())
 
-    # 2. Decluttered IDs (Υπολογισμός στα τρέχοντα δεδομένα)
+    # 2. Κρατάμε την ΤΕΛΕΥΤΑΙΑ εικόνα/καταγραφή για κάθε ID μέσα στα τρέχοντα δεδομένα
+    if "DATE_DT" in df_filtered.columns:
+        df_latest_visits = df_filtered.sort_values("DATE_DT").drop_duplicates(subset=["ID"], keep="last")
+    else:
+        df_latest_visits = df_filtered.drop_duplicates(subset=["ID"], keep="last")
+
+    # 3. Decluttered IDs βάσει της τελευταίας επίσκεψης
     valid_answers = ["ΝΑΙ", "ΔΕΝ ΥΠΗΡΧΕ ΠΑΛΑΙΟ-ΜΗ ΕΓΚΕΚΡΙΜΕΝΟ ΥΛΙΚΟ"]
-    decluttered_ids = df_filtered[df_filtered["ANSWER"].isin(valid_answers)]["ID"].unique()
+    decluttered_ids = df_latest_visits[df_latest_visits["ANSWER"].isin(valid_answers)]["ID"].unique()
     
     decluttered_count = len(decluttered_ids)
     decluttered_count = min(decluttered_count, total_active_ids)
@@ -177,8 +183,8 @@ if not df_filtered.empty:
         orientation='h',
         marker=dict(color='#20B2AA'),
         text=f"{decluttered_count:,}",
-        textposition='inside',
-        insidetextfont=dict(color='white', size=14)
+        textposition='auto',
+        insidetextfont=dict(color='white', size=13)
     ))
 
     fig_coverage.add_trace(go.Bar(
@@ -187,9 +193,9 @@ if not df_filtered.empty:
         name="Remaining",
         orientation='h',
         marker=dict(color='#1B4D54'),
-        text=f"Remaining: {remaining_active:,}",
-        textposition='inside',
-        insidetextfont=dict(color='white', size=14)
+        text=f"Remaining: {remaining_active:,}" if remaining_active > 0 else "",
+        textposition='auto',
+        insidetextfont=dict(color='white', size=13)
     ))
 
     fig_coverage.update_layout(
