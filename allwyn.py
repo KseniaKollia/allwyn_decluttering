@@ -36,7 +36,6 @@ def check_password():
     password_input = st.text_input("Password:", type="password")
     
     if st.button("Connect"):
-        # Ορισμός του κωδικού AllwynDQ@
         expected_password = st.secrets.get("CLIENT_PASSWORD", "AllwynDQ@")
         if password_input == expected_password:
             st.session_state["password_correct"] = True
@@ -58,7 +57,6 @@ SHEET_ID = "1Aw83hnkXT8yaXkKbpVAiCTx7AXT0Z-GXgAwS6r1itNs"
 def load_sheet_data(worksheet_name):
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={worksheet_name}"
     df = pd.read_csv(url)
-    # Καθαρισμός ονομάτων στηλών (αφαίρεση κενών)
     df.columns = [str(c).strip() for c in df.columns]
     return df
 
@@ -83,7 +81,6 @@ else:
 
 selected_month = st.sidebar.selectbox("MONTH (Μήνας)", available_months)
 
-# Φιλτράρισμα βάσει Μήνα
 df_filtered = df_opap.copy()
 if selected_month != "ALL":
     df_filtered = df_filtered[df_filtered["MONTH"] == selected_month]
@@ -106,12 +103,12 @@ st.title("📊 Allwyn Decluttering Dashboard")
 st.markdown("---")
 
 # ---------------------------------------------------------
-# ΔΙΑΓΡΑΜΜΑ 2: NETWORK COVERAGE (Με τη λογική της SQL)
+# ΔΙΑΓΡΑΜΜΑ 2: NETWORK COVERAGE
 # ---------------------------------------------------------
 st.subheader("NETWORK COVERAGE")
 
 if not df_filtered.empty:
-    # 1. Υπολογισμός Τελευταίας Επίσκεψης ανά ID (QUALIFY ROW_NUMBER OVER PARTITION BY ID ORDER BY AA DESC)
+    # 1. Υπολογισμός Τελευταίας Επίσκεψης ανά ID
     if "AA" in df_filtered.columns:
         df_sorted = df_filtered.sort_values(by="AA", ascending=False)
     else:
@@ -120,16 +117,23 @@ if not df_filtered.empty:
     df_last_visit = df_sorted.drop_duplicates(subset=["ID"], keep="first").copy()
 
     # 2. Υπολογισμός ACTIVE καταστημάτων
-    # Συνδυασμός STATUS από το 1ο sheet και ACTIVITY από το 2ο sheet
-    total_active_ids = len(df_stores[df_stores["ACTIVITY"].str.upper() == "ACTIVE"]["ID"].unique()) if "ACTIVITY" in df_stores.columns else len(df_last_visit[df_last_visit["STATUS"].str.upper() == "ACTIVE"]["ID"].unique())
+    df_stores_filtered = df_stores.copy()
+    if selected_week != "ALL" and "WEEK" in df_stores.columns:
+        df_stores_filtered = df_stores_filtered[df_stores_filtered["WEEK"] == selected_week]
+
+    if "ACTIVITY" in df_stores_filtered.columns:
+        total_active_ids = len(df_stores_filtered[df_stores_filtered["ACTIVITY"].astype(str).str.upper() == "ACTIVE"]["ID"].unique())
+    else:
+        total_active_ids = len(df_last_visit[df_last_visit["STATUS"].astype(str).str.upper() == "ACTIVE"]["ID"].unique())
+
     if total_active_ids == 0:
         total_active_ids = len(df_last_visit["ID"].unique())
 
-    # 3. Υπολογισμός DECLUTTERED (ΝΑΙ ή ΔΕΝ ΥΠΗΡΧΕ...)
+    # 3. Υπολογισμός DECLUTTERED
     valid_answers = ["ΝΑΙ", "ΔΕΝ ΥΠΗΡΧΕ ΠΑΛΑΙΟ-ΜΗ ΕΓΚΕΚΡΙΜΕΝΟ ΥΛΙΚΟ"]
     
     df_decluttered = df_last_visit[
-        (df_last_visit["STATUS"].str.upper() == "ACTIVE") & 
+        (df_last_visit["STATUS"].astype(str).str.upper() == "ACTIVE") & 
         (df_last_visit["ANSWER"].isin(valid_answers))
     ]
     
@@ -170,7 +174,7 @@ if not df_filtered.empty:
         barmode='stack',
         height=180,
         margin=dict(l=20, r=20, t=30, b=20),
-        xaxis=dict(range=[0, max(total_active_ids * 1.15, 100)], title="Totalv IDs"),
+        xaxis=dict(range=[0, max(total_active_ids * 1.15, 100)], title="Total Active IDs"), # Διορθώθηκε το typo εδώ
         showlegend=True,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
@@ -180,7 +184,7 @@ if not df_filtered.empty:
 st.markdown("---")
 
 # ---------------------------------------------------------
-# ΔΙΑΓΡΑΜΜΑ 1: ΑΦΑΙΡΕΘΗΚΕ ΤΥΧΟΝ ΤΟΠΟΘΕΤΗΜΕΝΟ ΥΛΙΚΟ (Stacked ανά Εβδομάδα)
+# ΔΙΑΓΡΑΜΜΑ 1: ΑΦΑΙΡΕΘΗΚΕ ΤΥΧΟΝ ΤΟΠΟΘΕΤΗΜΕΝΟ ΥΛΙΚΟ
 # ---------------------------------------------------------
 st.subheader("ΑΦΑΙΡΕΘΗΚΕ ΤΥΧΟΝ ΤΟΠΟΘΕΤΗΜΕΝΟ ΠΑΛΑΙΟ Η ΜΗ ΕΓΚΡΚΡΙΜΕΝΟ ΥΛΙΚΟ (ΑΦΙΣΕΣ) ΑΠΟ ΤΟ ΚΑΤΑΣΤΗΜΑ ?")
 
@@ -214,7 +218,7 @@ if "WEEK" in df_filtered.columns and "ANSWER" in df_filtered.columns:
     st.plotly_chart(fig_weekly, use_container_width=True)
 
 # ---------------------------------------------------------
-# 6. ΑΝΑΛΥΤΙΚΟΣ ΠΙΝΑΚΑΣ ΔΕΔΟΜΕΝΩΝ (SIDE FILTER SEARCH)
+# 6. ΑΝΑΛΥΤΙΚΟΣ ΠΙΝΑΚΑΣ ΔΕΔΟΜΕΝΩΝ
 # ---------------------------------------------------------
 with st.expander("🔍 Search & IDs"):
     st.dataframe(df_filtered, use_container_width=True)
