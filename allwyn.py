@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import urllib.parse
 
 # ---------------------------------------------------------
-# 1. ΡΥΘΜΙΣΗ ΣΕΛΙΔΑΣ & DESIGN (LOOKER THEME)
+# 1. ΡΥΘΜΙΣΗ ΣΕΛΙΔΑΣ & DESIGN (DARK PETROL THEME)
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="DECLUTTERING QUESTION",
@@ -13,11 +13,15 @@ st.set_page_config(
     page_icon="📊"
 )
 
+# Custom CSS για ενιαίο σκούρο φόντο και καθαρά λευκά γράμματα
 st.markdown("""
     <style>
-    .stApp { background-color: #f4f6f8; }
-    div[data-baseweb="select"] > div { background-color: #246068 !important; color: white !important; }
-    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .stApp { background-color: #112229; color: #FFFFFF; }
+    div[data-baseweb="select"] > div { background-color: #1A333D !important; color: white !important; }
+    .stMetric { background-color: #1A333D; padding: 15px; border-radius: 8px; border: 1px solid #2A4D59; }
+    .stMetric label { color: #A3C1AD !important; }
+    .stMetric div { color: #FFFFFF !important; }
+    h1, h2, h3, h4, h5, h6, label, p, span { color: #FFFFFF !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -56,7 +60,6 @@ SHEET_ID = "1Aw83hnkXT8yaXkKbpVAiCTx7AXT0Z-GXgAwS6r1itNs"
 
 @st.cache_data(ttl=60)
 def load_sheet_data(worksheet_name):
-    # Μετατροπή ονόματος φύλλου για ασφαλές URL (URL Encoding για ελληνικά & κενά)
     encoded_sheet_name = urllib.parse.quote(worksheet_name)
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_sheet_name}"
     df = pd.read_csv(url)
@@ -71,70 +74,83 @@ except Exception as e:
     st.stop()
 
 # ---------------------------------------------------------
-# 4. SIDEBAR - ΦΙΛΤΡΑ (WEEK & MONTH)
+# 4. LOGOS & HEADER AREA
 # ---------------------------------------------------------
-st.sidebar.header("🎯 Filters")
+header_col1, header_col2, header_col3 = st.columns([1, 4, 1])
 
-# Φίλτρο Μήνα (DATE/MONTH)
-if "DATE" in df_opap.columns:
-    df_opap["MONTH"] = pd.to_datetime(df_opap["DATE"], errors='coerce').dt.strftime('%B %Y')
-    available_months = ["ALL"] + list(df_opap["MONTH"].dropna().unique())
-else:
-    available_months = ["ALL"]
+with header_col1:
+    try:
+        st.image("WEST_logo.png", width=150)
+    except Exception:
+        pass
 
-selected_month = st.sidebar.selectbox("MONTH (Μήνας)", available_months)
+with header_col2:
+    st.title("📊 Allwyn Decluttering Dashboard")
 
-df_filtered = df_opap.copy()
-if selected_month != "ALL":
-    df_filtered = df_filtered[df_filtered["MONTH"] == selected_month]
+with header_col3:
+    try:
+        st.image("ALLWYN_logo.png", width=150)
+    except Exception:
+        pass
 
-# Φίλτρο Εβδομάδας (WEEK)
-if "WEEK" in df_filtered.columns:
-    available_weeks = ["ALL"] + sorted(list(df_filtered["WEEK"].dropna().unique()))
-else:
-    available_weeks = ["ALL"]
-
-selected_week = st.sidebar.selectbox("WEEK (Εβδομάδα)", available_weeks)
-
-if selected_week != "ALL":
-    df_filtered = df_filtered[df_filtered["WEEK"] == selected_week]
-
-# ---------------------------------------------------------
-# 5. DASHBOARD MAIN CONTENT
-# ---------------------------------------------------------
-st.title("📊 Allwyn Decluttering Dashboard")
 st.markdown("---")
 
 # ---------------------------------------------------------
-# ΔΙΑΓΡΑΜΜΑ 2: NETWORK COVERAGE
+# 5. SIDEBAR - ΠΟΛΛΑΠΛΑ ΦΙΛΤΡΑ (MULTI-SELECT)
+# ---------------------------------------------------------
+st.sidebar.header("🎯 Filters")
+
+# --- 1. Φίλτρο Μήνα (DATE/MONTH) ---
+if "DATE" in df_opap.columns:
+    df_opap["MONTH"] = pd.to_datetime(df_opap["DATE"], errors='coerce').dt.strftime('%B %Y')
+    available_months = sorted(list(df_opap["MONTH"].dropna().unique()))
+else:
+    available_months = []
+
+selected_months = st.sidebar.multiselect("MONTH (Μήνας)", options=available_months, default=[])
+
+# Φιλτράρισμα βάσει Μήνα (Εφαρμόζεται παντού)
+df_month_filtered = df_opap.copy()
+if selected_months:
+    df_month_filtered = df_month_filtered[df_month_filtered["MONTH"].isin(selected_months)]
+
+# --- 2. Φίλτρο Εβδομάδας (WEEK) ---
+if "WEEK" in df_month_filtered.columns:
+    available_weeks = sorted(list(df_month_filtered["WEEK"].dropna().unique()))
+else:
+    available_weeks = []
+
+selected_weeks = st.sidebar.multiselect("WEEK (Εβδομάδα)", options=available_weeks, default=[])
+
+# Φιλτράρισμα βάσει Εβδομάδας (Εφαρμόζεται ΜΟΝΟ στο 1ο διάγραμμα)
+df_weekly_filtered = df_month_filtered.copy()
+if selected_weeks:
+    df_weekly_filtered = df_weekly_filtered[df_weekly_filtered["WEEK"].isin(selected_weeks)]
+
+# ---------------------------------------------------------
+# 6. ΔΙΑΓΡΑΜΜΑ 2: NETWORK COVERAGE (Επηρεάζεται ΜΟΝΟ από MONTH)
 # ---------------------------------------------------------
 st.subheader("NETWORK COVERAGE")
 
-if not df_filtered.empty:
-    # 1. Υπολογισμός Τελευταίας Επίσκεψης ανά ID
-    if "AA" in df_filtered.columns:
-        df_sorted = df_filtered.sort_values(by="AA", ascending=False)
+if not df_month_filtered.empty:
+    if "AA" in df_month_filtered.columns:
+        df_sorted = df_month_filtered.sort_values(by="AA", ascending=False)
     else:
-        df_sorted = df_filtered.copy()
+        df_sorted = df_month_filtered.copy()
 
     df_last_visit = df_sorted.drop_duplicates(subset=["ID"], keep="first").copy()
 
-    # 2. Υπολογισμός ACTIVE καταστημάτων
-    df_stores_filtered = df_stores.copy()
-    if selected_week != "ALL" and "WEEK" in df_stores.columns:
-        df_stores_filtered = df_stores_filtered[df_stores_filtered["WEEK"] == selected_week]
-
-    if "ACTIVITY" in df_stores_filtered.columns:
-        total_active_ids = len(df_stores_filtered[df_stores_filtered["ACTIVITY"].astype(str).str.upper() == "ACTIVE"]["ID"].unique())
+    # Active IDs
+    if "ACTIVITY" in df_stores.columns:
+        total_active_ids = len(df_stores[df_stores["ACTIVITY"].astype(str).str.upper() == "ACTIVE"]["ID"].unique())
     else:
         total_active_ids = len(df_last_visit[df_last_visit["STATUS"].astype(str).str.upper() == "ACTIVE"]["ID"].unique())
 
     if total_active_ids == 0:
         total_active_ids = len(df_last_visit["ID"].unique())
 
-    # 3. Υπολογισμός DECLUTTERED
+    # Decluttered IDs
     valid_answers = ["ΝΑΙ", "ΔΕΝ ΥΠΗΡΧΕ ΠΑΛΑΙΟ-ΜΗ ΕΓΚΕΚΡΙΜΕΝΟ ΥΛΙΚΟ"]
-    
     df_decluttered = df_last_visit[
         (df_last_visit["STATUS"].astype(str).str.upper() == "ACTIVE") & 
         (df_last_visit["ANSWER"].isin(valid_answers))
@@ -144,13 +160,13 @@ if not df_filtered.empty:
     remaining_active = max(0, total_active_ids - decluttered_count)
     coverage_pct = (decluttered_count / total_active_ids * 100) if total_active_ids > 0 else 0
 
-    # Κάρτες Μετρικών
+    # Μετρικές
     c1, c2, c3 = st.columns(3)
     c1.metric("Total active IDs", f"{total_active_ids:,}")
     c2.metric("Decluttered", f"{decluttered_count:,}")
     c3.metric("Coverage %", f"{coverage_pct:.1f}%")
 
-    # Stacked Horizontal Bar
+    # Chart Coverage
     fig_coverage = go.Figure()
 
     fig_coverage.add_trace(go.Bar(
@@ -160,7 +176,8 @@ if not df_filtered.empty:
         orientation='h',
         marker=dict(color='#20B2AA'),
         text=f"{decluttered_count:,}",
-        textposition='inside'
+        textposition='inside',
+        insidetextfont=dict(color='white')
     ))
 
     fig_coverage.add_trace(go.Bar(
@@ -170,16 +187,26 @@ if not df_filtered.empty:
         orientation='h',
         marker=dict(color='#1B4D54'),
         text=f"Total: {total_active_ids:,}",
-        textposition='outside'
+        textposition='outside',
+        outsidetextfont=dict(color='white')
     ))
 
     fig_coverage.update_layout(
         barmode='stack',
         height=180,
         margin=dict(l=20, r=20, t=30, b=20),
-        xaxis=dict(range=[0, max(total_active_ids * 1.15, 100)], title="Total Active IDs"),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='white'),
+        xaxis=dict(
+            range=[0, max(total_active_ids * 1.15, 100)], 
+            title="Total Active IDs",
+            showgrid=False,
+            color='white'
+        ),
+        yaxis=dict(color='white'),
         showlegend=True,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color='white'))
     )
 
     st.plotly_chart(fig_coverage, use_container_width=True)
@@ -187,12 +214,12 @@ if not df_filtered.empty:
 st.markdown("---")
 
 # ---------------------------------------------------------
-# ΔΙΑΓΡΑΜΜΑ 1: ΑΦΑΙΡΕΘΗΚΕ ΤΥΧΟΝ ΤΟΠΟΘΕΤΗΜΕΝΟ ΥΛΙΚΟ
+# 7. ΔΙΑΓΡΑΜΜΑ 1: WEEKLY STACKED BAR (Επηρεάζεται από MONTH & WEEK)
 # ---------------------------------------------------------
 st.subheader("ΑΦΑΙΡΕΘΗΚΕ ΤΥΧΟΝ ΤΟΠΟΘΕΤΗΜΕΝΟ ΠΑΛΑΙΟ Η ΜΗ ΕΓΚΡΚΡΙΜΕΝΟ ΥΛΙΚΟ (ΑΦΙΣΕΣ) ΑΠΟ ΤΟ ΚΑΤΑΣΤΗΜΑ ?")
 
-if "WEEK" in df_filtered.columns and "ANSWER" in df_filtered.columns:
-    df_chart = df_filtered.groupby(["WEEK", "ANSWER"]).size().reset_index(name="Count")
+if "WEEK" in df_weekly_filtered.columns and "ANSWER" in df_weekly_filtered.columns and not df_weekly_filtered.empty:
+    df_chart = df_weekly_filtered.groupby(["WEEK", "ANSWER"]).size().reset_index(name="Count")
     
     color_map = {
         "ΝΑΙ": "#2EE6B6",
@@ -211,17 +238,31 @@ if "WEEK" in df_filtered.columns and "ANSWER" in df_filtered.columns:
 
     fig_weekly.update_layout(
         barmode='stack',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='white'),
         xaxis_title="Week",
         yaxis_title="Total Answers",
         legend_title_text="",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        height=450
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color='white')),
+        height=480,
+        xaxis=dict(
+            showgrid=False,          # Αφαίρεση γραμμών πλέγματος X
+            type='category',         # Εμφάνιση ΟΛΩΝ των εβδομάδων (Week 1, Week 2, Week 3...)
+            color='white'
+        ),
+        yaxis=dict(
+            showgrid=False,          # Αφαίρεση γραμμών πλέγματος Y
+            color='white'
+        )
     )
 
     st.plotly_chart(fig_weekly, use_container_width=True)
+else:
+    st.info("No data available for the selected filters.")
 
 # ---------------------------------------------------------
-# 6. ΑΝΑΛΥΤΙΚΟΣ ΠΙΝΑΚΑΣ ΔΕΔΟΜΕΝΩΝ
+# 8. ΑΝΑΛΥΤΙΚΟΣ ΠΙΝΑΚΑΣ ΔΕΔΟΜΕΝΩΝ
 # ---------------------------------------------------------
 with st.expander("🔍 Search & IDs"):
-    st.dataframe(df_filtered, use_container_width=True)
+    st.dataframe(df_weekly_filtered, use_container_width=True)
