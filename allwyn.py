@@ -25,7 +25,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 2. ΑΣΦΑΛΕΙΑ ΜΕ ΚΩΔΙΚΟ (LOGIN FORM ME ENTER)
+# 2. ΑΣΦΑΛΕΙΑ ΜΕ ΚΩΔΙΚΟ
 # ---------------------------------------------------------
 def check_password():
     if "password_correct" not in st.session_state:
@@ -55,7 +55,7 @@ if not check_password():
     st.stop()
 
 # ---------------------------------------------------------
-# 3. ΦΟΡΤΩΣΗ & ΑΚΡΙΒΗΣ ΜΕΤΑΤΡΟΠΗ ΗΜΕΡΟΜΗΝΙΑΣ (DD/MM/YYYY)
+# 3. ΦΟΡΤΩΣΗ & ΜΕΤΑΤΡΟΠΗ ΗΜΕΡΟΜΗΝΙΑΣ (DD/MM/YYYY)
 # ---------------------------------------------------------
 SHEET_ID = "1Aw83hnkXT8yaXkKbpVAiCTx7AXT0Z-GXgAwS6r1itNs"
 
@@ -74,7 +74,7 @@ except Exception as e:
     st.error(f"Error loading Google Sheet: {e}")
     st.stop()
 
-# Ακριβής μετατροπή ημερομηνίας μορφής DD/MM/YYYY
+# Μετατροπή ημερομηνίας
 if "DATE" in df_opap.columns:
     df_opap["DATE_DT"] = pd.to_datetime(df_opap["DATE"], format="%d/%m/%Y", errors='coerce')
     df_opap["DATE_DT"] = df_opap["DATE_DT"].fillna(pd.to_datetime(df_opap["DATE"], dayfirst=True, errors='coerce'))
@@ -107,11 +107,11 @@ with header_col3:
 st.markdown("---")
 
 # ---------------------------------------------------------
-# 5. SIDEBAR - ΦΙΛΤΡΑ (DEFAULT = ΟΛΑ ΤΑ ΔΕΔΟΜΕΝΑ)
+# 5. SIDEBAR - ΦΙΛΤΡΑ
 # ---------------------------------------------------------
 st.sidebar.header("🎯 Filters")
 
-# 1. Φίλτρο Μήνα (Ταξινομημένα χρονολογικά)
+# 1. Φίλτρο Μήνα
 if "DATE_DT" in df_opap.columns and not df_opap["DATE_DT"].dropna().empty:
     df_months = df_opap.dropna(subset=["DATE_DT"]).sort_values("DATE_DT")
     months_order = df_months["MONTH"].unique().tolist()
@@ -120,13 +120,12 @@ else:
 
 selected_months = st.sidebar.multiselect("MONTH (Μήνας)", options=months_order, default=[])
 
-# Αν ΔΕΝ έχει επιλεγεί τίποτα, κρατάμε ΟΛΟΥΣ τους μήνες
 if selected_months:
     df_month_filtered = df_opap[df_opap["MONTH"].isin(selected_months)]
 else:
     df_month_filtered = df_opap.copy()
 
-# 2. Φίλτρο Εβδομάδας (Εμφανίζει ΑΠΟΚΛΕΙΣΤΙΚΑ τις εβδομάδες των επιλεγμένων μηνών)
+# 2. Φίλτρο Εβδομάδας
 if "WEEK_NUM" in df_month_filtered.columns:
     available_weeks = sorted([int(x) for x in df_month_filtered["WEEK_NUM"].dropna().unique()])
 else:
@@ -134,14 +133,13 @@ else:
 
 selected_weeks = st.sidebar.multiselect("WEEK (Εβδομάδα)", options=available_weeks, default=[])
 
-# Αν ΔΕΝ έχει επιλεγεί τίποτα, κρατάμε ΟΛΕΣ τις εβδομάδες
 if selected_weeks:
     df_filtered = df_month_filtered[df_month_filtered["WEEK_NUM"].isin(selected_weeks)]
 else:
     df_filtered = df_month_filtered.copy()
 
 # ---------------------------------------------------------
-# 6. ΔΙΑΓΡΑΜΜΑ 1: NETWORK COVERAGE (ΜΕ ΒΑΣΗ ΤΗΝ ΤΕΛΕΥΤΑΙΑ ΚΑΤΑΓΡΑΦΗ ΑΝΑ ID)
+# 6. ΔΙΑΓΡΑΜΜΑ 1: NETWORK COVERAGE (SQL LOGIC: ΗΜΕΡΟΜΗΝΙΑ / ROW ID)
 # ---------------------------------------------------------
 st.subheader("NETWORK COVERAGE")
 
@@ -152,13 +150,16 @@ if not df_filtered.empty:
     else:
         total_active_ids = len(df_opap["ID"].unique())
 
-    # 2. Κρατάμε την ΤΕΛΕΥΤΑΙΑ εικόνα/καταγραφή για κάθε ID μέσα στα τρέχοντα δεδομένα
-    if "DATE_DT" in df_filtered.columns:
-        df_latest_visits = df_filtered.sort_values("DATE_DT").drop_duplicates(subset=["ID"], keep="last")
+    # 2. Τελευταία εγγραφή ανά ID με βάση την ΗΜΕΡΟΜΗΝΙΑ (ή τη σειρά εγγραφής)
+    if "DATE_DT" in df_filtered.columns and not df_filtered["DATE_DT"].isna().all():
+        df_sorted = df_filtered.sort_values(by="DATE_DT")
     else:
-        df_latest_visits = df_filtered.drop_duplicates(subset=["ID"], keep="last")
+        df_sorted = df_filtered.copy()
 
-    # 3. Decluttered IDs βάσει της τελευταίας επίσκεψης
+    # Κρατάμε την τελευταία καταγραφή για κάθε ID
+    df_latest_visits = df_sorted.drop_duplicates(subset=["ID"], keep="last")
+
+    # 3. Decluttered IDs
     valid_answers = ["ΝΑΙ", "ΔΕΝ ΥΠΗΡΧΕ ΠΑΛΑΙΟ-ΜΗ ΕΓΚΕΚΡΙΜΕΝΟ ΥΛΙΚΟ"]
     decluttered_ids = df_latest_visits[df_latest_visits["ANSWER"].isin(valid_answers)]["ID"].unique()
     
@@ -183,8 +184,9 @@ if not df_filtered.empty:
         orientation='h',
         marker=dict(color='#20B2AA'),
         text=f"{decluttered_count:,}",
-        textposition='auto',
-        insidetextfont=dict(color='white', size=13)
+        textposition='inside',
+        insidetextfont=dict(color='white', size=13),
+        cliponaxis=False
     ))
 
     fig_coverage.add_trace(go.Bar(
@@ -194,19 +196,20 @@ if not df_filtered.empty:
         orientation='h',
         marker=dict(color='#1B4D54'),
         text=f"Remaining: {remaining_active:,}" if remaining_active > 0 else "",
-        textposition='auto',
-        insidetextfont=dict(color='white', size=13)
+        textposition='outside',
+        textfont=dict(color='white', size=13),
+        cliponaxis=False
     ))
 
     fig_coverage.update_layout(
         barmode='stack',
         height=180,
-        margin=dict(l=20, r=20, t=30, b=20),
+        margin=dict(l=20, r=120, t=30, b=20), # Αυξημένο περιθώριο δεξιά για να μην κόβεται το text
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(color='white'),
         xaxis=dict(
-            range=[0, total_active_ids * 1.05], 
+            range=[0, total_active_ids * 1.2], # Διευρυμένο range για τα labels
             title="Total Active IDs",
             showgrid=False,
             color='white'
@@ -221,7 +224,7 @@ if not df_filtered.empty:
 st.markdown("---")
 
 # ---------------------------------------------------------
-# 7. ΔΙΑΓΡΑΜΜΑ 2: WEEKLY STACKED BAR
+# 7. ΔΙΑΓΡΑΜΜΑ 2: WEEKLY STACKED BAR (ΑΡΙΘΜΟΙ ΑΝΑ ΧΡΩΜΑ/ΑΠΑΝΤΗΣΗ)
 # ---------------------------------------------------------
 st.subheader("ΑΦΑΙΡΕΘΗΚΕ ΤΥΧΟΝ ΤΟΠΟΘΕΤΗΜΕΝΟ ΠΑΛΑΙΟ Η ΜΗ ΕΓΚΡΚΡΙΜΕΝΟ ΥΛΙΚΟ (ΑΦΙΣΕΣ) ΑΠΟ ΤΟ ΚΑΤΑΣΤΗΜΑ ?")
 
@@ -229,8 +232,6 @@ if "WEEK_NUM" in df_filtered.columns and "ANSWER" in df_filtered.columns and not
     df_chart = df_filtered.groupby(["WEEK_NUM", "ANSWER"]).size().reset_index(name="Count")
     df_chart = df_chart.sort_values(by="WEEK_NUM")
     df_chart["WEEK_LABEL"] = "Week " + df_chart["WEEK_NUM"].astype(int).astype(str)
-
-    totals = df_chart.groupby("WEEK_LABEL")["Count"].sum().reset_index(name="Total")
 
     color_map = {
         "ΝΑΙ": "#2EE6B6",
@@ -247,23 +248,12 @@ if "WEEK_NUM" in df_filtered.columns and "ANSWER" in df_filtered.columns and not
         text="Count"
     )
 
+    # Καθαροί αριθμοί ανά τμήμα (χωρίς σύνολα στην κορυφή)
     fig_weekly.update_traces(
         textposition='inside',
-        insidetextfont=dict(color='white', size=12),
+        insidetextfont=dict(color='white', size=11),
         textangle=0
     )
-
-    for _, row in totals.iterrows():
-        fig_weekly.add_annotation(
-            x=row["WEEK_LABEL"],
-            y=row["Total"],
-            text=str(row["Total"]),
-            showarrow=False,
-            yshift=12,
-            font=dict(color="white", size=13, family="Arial Black")
-        )
-
-    max_y = totals["Total"].max() * 1.18 if not totals.empty else 100
 
     fig_weekly.update_layout(
         barmode='stack',
@@ -282,8 +272,7 @@ if "WEEK_NUM" in df_filtered.columns and "ANSWER" in df_filtered.columns and not
         ),
         yaxis=dict(
             showgrid=False,
-            color='white',
-            range=[0, max_y]
+            color='white'
         )
     )
 
@@ -296,7 +285,7 @@ st.markdown("---")
 # ---------------------------------------------------------
 # 8. ΑΝΑΖΗΤΗΣΗ STORE ID & ΙΣΤΟΡΙΚΟ
 # ---------------------------------------------------------
-st.subheader("🔎 Search Store ID")
+st.subheader("🔎 Store ID History Lookup")
 
 if "ID" in df_opap.columns:
     all_store_ids = sorted([str(x) for x in df_opap["ID"].dropna().unique()])
