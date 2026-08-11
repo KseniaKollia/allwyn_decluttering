@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import urllib.parse
 
 # ---------------------------------------------------------
 # 1. ΡΥΘΜΙΣΗ ΣΕΛΙΔΑΣ & DESIGN (LOOKER THEME)
@@ -55,7 +56,9 @@ SHEET_ID = "1Aw83hnkXT8yaXkKbpVAiCTx7AXT0Z-GXgAwS6r1itNs"
 
 @st.cache_data(ttl=60)
 def load_sheet_data(worksheet_name):
-    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={worksheet_name}"
+    # Μετατροπή ονόματος φύλλου για ασφαλές URL (URL Encoding για ελληνικά & κενά)
+    encoded_sheet_name = urllib.parse.quote(worksheet_name)
+    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_sheet_name}"
     df = pd.read_csv(url)
     df.columns = [str(c).strip() for c in df.columns]
     return df
@@ -174,7 +177,7 @@ if not df_filtered.empty:
         barmode='stack',
         height=180,
         margin=dict(l=20, r=20, t=30, b=20),
-        xaxis=dict(range=[0, max(total_active_ids * 1.15, 100)], title="Total Active IDs"), # Διορθώθηκε το typo εδώ
+        xaxis=dict(range=[0, max(total_active_ids * 1.15, 100)], title="Total Active IDs"),
         showlegend=True,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
