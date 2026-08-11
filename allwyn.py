@@ -85,22 +85,22 @@ if "WEEK" in df_opap.columns:
     df_opap["WEEK_NUM"] = pd.to_numeric(df_opap["WEEK"].astype(str).str.extract(r'(\d+)')[0], errors='coerce')
 
 # ---------------------------------------------------------
-# 4. LOGOS & HEADER
+# 4. LOGOS & HEADER (ΚΕΝΤΡΑΡΙΣΜΕΝΑ)
 # ---------------------------------------------------------
-header_col1, header_col2, header_col3 = st.columns([1, 4, 1])
+header_col1, header_col2, header_col3 = st.columns([1, 4, 1], vertical_alignment="center")
 
 with header_col1:
     try:
-        st.image("WEST_logo.png", width=150)
+        st.image("WEST_logo.png", width=140)
     except Exception:
         pass
 
 with header_col2:
-    st.title("📊 Allwyn Decluttering Dashboard")
+    st.title("Allwyn Decluttering Dashboard")
 
 with header_col3:
     try:
-        st.image("ALLWYN_logo.png", width=150)
+        st.image("ALLWYN_logo.png", width=140)
     except Exception:
         pass
 
@@ -284,25 +284,41 @@ else:
 st.markdown("---")
 
 # ---------------------------------------------------------
-# 8. ΑΝΑΖΗΤΗΣΗ STORE ID & ΙΣΤΟΡΙΚΟ
+# 8. ΑΝΑΖΗΤΗΣΗ STORE ID (LOOKER STYLE - ID + WEEKS)
 # ---------------------------------------------------------
 st.subheader("🔍 Search Store ID")
 
 if "ID" in df_opap.columns:
-    all_store_ids = sorted([str(x) for x in df_opap["ID"].dropna().unique()])
-    selected_store_id = st.selectbox("Select or Search Store ID:", options=["-- Choose Store ID --"] + all_store_ids)
+    # Υπολογισμός πλήθους εβδομάδων/εγγραφών ανά ID για τη λίστα επιλογής
+    id_counts = df_opap.groupby("ID").size().to_dict()
+    
+    # Δημιουργία λίστας με τη μορφή: "233264 (3 weeks)"
+    formatted_options = []
+    store_map = {}  # Χάρτης για επιστροφή από το κείμενο στο αρχικό ID
+    
+    sorted_ids = sorted([str(x) for x in df_opap["ID"].dropna().unique()])
+    
+    for sid in sorted_ids:
+        count = id_counts.get(int(sid) if sid.isdigit() else sid, 0)
+        label = f"{sid}  —  ({count} weeks)"
+        formatted_options.append(label)
+        store_map[label] = sid
 
-    if selected_store_id != "-- Choose Store ID --":
+    selected_option = st.selectbox(
+        "Select or Search Store ID:", 
+        options=["-- Choose Store ID --"] + formatted_options
+    )
+
+    if selected_option != "-- Choose Store ID --":
+        selected_store_id = store_map[selected_option]
         df_single_store = df_opap[df_opap["ID"].astype(str) == selected_store_id].copy()
         
         if "WEEK_NUM" in df_single_store.columns:
             df_single_store = df_single_store.sort_values(by="WEEK_NUM")
             
-        # Υπολογισμός συνολικών επισκέψεων και μοναδικών εβδομάδων
         total_visits = len(df_single_store)
         unique_weeks_count = df_single_store["WEEK_NUM"].nunique() if "WEEK_NUM" in df_single_store.columns else 0
 
-        # Εμφάνιση μετρικών για το επιλεγμένο κατάστημα
         s_col1, s_col2 = st.columns(2)
         s_col1.metric("Total Visits", total_visits)
         s_col2.metric("Visited in Weeks (Count)", f"{unique_weeks_count} weeks")
