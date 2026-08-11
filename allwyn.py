@@ -10,7 +10,7 @@ import urllib.parse
 st.set_page_config(
     page_title="DECLUTTERING QUESTION",
     layout="wide",
-    page_icon="📊"
+    page_icon="📈"
 )
 
 st.markdown("""
@@ -47,7 +47,7 @@ def check_password():
                 st.session_state["password_correct"] = True
                 st.rerun()
             else:
-                st.error("⚠️ Wrong password.")
+                st.error("🚨 Wrong password.")
             
     return False
 
@@ -109,7 +109,7 @@ st.markdown("---")
 # ---------------------------------------------------------
 # 5. SIDEBAR - ΦΙΛΤΡΑ
 # ---------------------------------------------------------
-st.sidebar.header("🎯 Filters")
+st.sidebar.header("⚙️ Dashboard Filters")
 
 # 1. Φίλτρο Μήνα (Διατήρηση φυσικής σειράς εμφάνισης)
 months_order = [m for m in df_opap["MONTH"].unique() if pd.notna(m)] if "MONTH" in df_opap.columns else []
@@ -135,7 +135,7 @@ else:
     df_filtered = df_month_filtered.copy()
 
 # ---------------------------------------------------------
-# 6. ΔΙΑΓΡΑΜΜΑ 1: NETWORK COVERAGE (ΦΥΣΙΚΗ ΣΕΙΡΑ ΕΓΓΡΑΦΩΝ)
+# 6. ΔΙΑΓΡΑΜΜΑ 1: NETWORK COVERAGE
 # ---------------------------------------------------------
 st.subheader("NETWORK COVERAGE")
 
@@ -146,7 +146,7 @@ if not df_filtered.empty:
     else:
         total_active_ids = len(df_opap["ID"].unique())
 
-    # 2. Κρατάμε ΑΠΕΥΘΕΙΑΣ την τελευταία εγγραφή κάθε ID βάσει της φυσικής σειράς του αρχείου
+    # 2. Κρατάμε ΑΠΕΥΘΕΙΑΣ την τελευταία εγγραφή κάθε ID
     df_latest_visits = df_filtered.drop_duplicates(subset=["ID"], keep="last")
 
     # 3. Decluttered IDs
@@ -239,12 +239,10 @@ if "WEEK_NUM" in df_filtered.columns and "ANSWER" in df_filtered.columns and not
         color_discrete_map=color_map
     )
 
-    # Hover πληροφορίες μόνο
     fig_weekly.update_traces(
         hovertemplate="<b>%{x}</b><br>%{fullData.name}: <b>%{y:,}</b><extra></extra>"
     )
 
-    # Εμφάνιση του Total μόνο στην κορυφή της μπάρας
     for _, row in totals.iterrows():
         fig_weekly.add_annotation(
             x=row["WEEK_LABEL"],
@@ -288,7 +286,7 @@ st.markdown("---")
 # ---------------------------------------------------------
 # 8. ΑΝΑΖΗΤΗΣΗ STORE ID & ΙΣΤΟΡΙΚΟ
 # ---------------------------------------------------------
-st.subheader("🔎 Store ID History Lookup")
+st.subheader("🔍 Search Store ID")
 
 if "ID" in df_opap.columns:
     all_store_ids = sorted([str(x) for x in df_opap["ID"].dropna().unique()])
@@ -300,6 +298,15 @@ if "ID" in df_opap.columns:
         if "WEEK_NUM" in df_single_store.columns:
             df_single_store = df_single_store.sort_values(by="WEEK_NUM")
             
+        # Υπολογισμός συνολικών επισκέψεων και μοναδικών εβδομάδων
+        total_visits = len(df_single_store)
+        unique_weeks_count = df_single_store["WEEK_NUM"].nunique() if "WEEK_NUM" in df_single_store.columns else 0
+
+        # Εμφάνιση μετρικών για το επιλεγμένο κατάστημα
+        s_col1, s_col2 = st.columns(2)
+        s_col1.metric("Total Visits", total_visits)
+        s_col2.metric("Visited in Weeks (Count)", f"{unique_weeks_count} weeks")
+
         st.write(f"**History for Store ID:** `{selected_store_id}`")
         display_cols = [c for c in ["WEEK", "DATE", "MONTH", "STATUS", "ANSWER"] if c in df_single_store.columns]
         st.dataframe(df_single_store[display_cols], use_container_width=True, hide_index=True)
