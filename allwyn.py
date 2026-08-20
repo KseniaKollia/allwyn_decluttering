@@ -106,7 +106,7 @@ SHEET_ID = "1Aw83hnkXT8yaXkKbpVAiCTx7AXT0Z-GXgAwS6r1itNs"
 @st.cache_data(ttl=60)
 def load_sheet_data(worksheet_name):
     encoded_sheet_name = urllib.parse.quote(worksheet_name)
-    url = fhttps://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_sheet_name}
+    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_sheet_name}"
     df = pd.read_csv(url)
     df.columns = [str(c).strip() for c in df.columns]
     return df
