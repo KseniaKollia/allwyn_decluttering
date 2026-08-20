@@ -18,29 +18,25 @@ st.markdown("""
     /* Background της εφαρμογής */
     .stApp { background-color: #112229; color: #FFFFFF; }
 
-    /* 1. ΕΝΙΑΙΑ ΛΕΥΚΗ ΛΩΡΙΔΑ HEADER (Logos + Τίτλος) */
-    [data-testid="stHeader"] {
-        display: none;
-    }
-    
-    .header-banner {
+    /* 1. ΕΝΙΑΙΟ ΛΕΥΚΟ HEADER BANNER (Περιλαμβάνει Logos & Τίτλο) */
+    div[data-testid="stHorizontalBlock"]:has(.header-text-style) {
         background-color: #FFFFFF !important;
-        padding: 15px 25px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
+        padding: 12px 25px !important;
+        border-radius: 8px !important;
+        margin-bottom: 20px !important;
+        align-items: center !important;
     }
 
-    .header-title-style {
-        color: #115566 !important; /* Χρώμα Remaining */
-        font-weight: 800;
-        font-size: 30px;
-        text-align: center;
-        margin: 0;
-        flex-grow: 1;
+    /* Τίτλος Dashboard - Χρώμα Remaining (#115566) & Κεντραρισμένος */
+    .header-text-style {
+        color: #115566 !important;
+        font-weight: 800 !important;
+        font-size: 28px !important;
+        text-align: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+        width: 100% !important;
     }
 
     /* 2. DASHBOARD FILTERS (SIDEBAR STYLING - Χρώμα #09A1A4) */
@@ -48,18 +44,14 @@ st.markdown("""
         background-color: #0E1A1F !important;
     }
 
-    [data-testid="stSidebar"] * {
-        color: #09A1A4 !important;
-    }
-
-    [data-testid="stSidebar"] label p, 
-    [data-testid="stSidebar"] .stMultiSelect label p,
+    [data-testid="stSidebar"] *, 
+    [data-testid="stSidebar"] label, 
+    [data-testid="stSidebar"] label p,
     [data-testid="stSidebar"] h1, 
     [data-testid="stSidebar"] h2, 
     [data-testid="stSidebar"] h3 {
         color: #09A1A4 !important;
         font-weight: bold !important;
-        font-size: 16px !important;
     }
 
     [data-testid="stSidebar"] div[data-baseweb="select"] > div { 
@@ -72,14 +64,14 @@ st.markdown("""
     }
 
     /* 3. METRICS STYLING (Περίγραμμα με το χρώμα του Decluttered #2FDDC0) */
-    .stMetric { 
-        background-color: #1A333D; 
-        padding: 15px; 
-        border-radius: 8px; 
+    [data-testid="stMetric"] { 
+        background-color: #1A333D !important; 
+        padding: 15px !important; 
+        border-radius: 8px !important; 
         border: 2px solid #2FDDC0 !important; /* Χρώμα Decluttered */
     }
-    .stMetric label { color: #2FDDC0 !important; }
-    .stMetric div { color: #FFFFFF !important; }
+    [data-testid="stMetricLabel"] p { color: #2FDDC0 !important; font-weight: bold; }
+    [data-testid="stMetricValue"] div { color: #FFFFFF !important; }
 
     /* Γενικά γράμματα στο main body */
     .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, 
@@ -120,7 +112,7 @@ if not check_password():
     st.stop()
 
 # ---------------------------------------------------------
-# 3. ΦΟΡΤΩΣΗ ΔΕΔΟΜΕΝΩΝ (ΔΙΑΤΗΡΗΣΗ ΦΥΣΙΚΗΣ ΣΕΙΡΑΣ)
+# 3. ΦΟΡΤΩΣΗ ΔΕΔΟΜΕΝΩΝ
 # ---------------------------------------------------------
 SHEET_ID = "1Aw83hnkXT8yaXkKbpVAiCTx7AXT0Z-GXgAwS6r1itNs"
 
@@ -150,31 +142,22 @@ if "WEEK" in df_opap.columns:
     df_opap["WEEK_NUM"] = pd.to_numeric(df_opap["WEEK"].astype(str).str.extract(r'(\d+)')[0], errors='coerce')
 
 # ---------------------------------------------------------
-# 4. LOGOS & HEADER (ΕΝΙΑΙΑ ΛΕΥΚΗ ΛΩΡΙΔΑ)
+# 4. LOGOS & HEADER BANNER
 # ---------------------------------------------------------
-st.markdown("""
-    <div class="header-banner">
-        <img src="app/static/WEST_logo.png" width="140" errors="this.style.display='none'">
-        <h1 class="header-title-style">Allwyn Decluttering Dashboard</h1>
-        <img src="app/static/ALLWYN_logo.png" width="140" errors="this.style.display='none'">
-    </div>
-""", unsafe_allow_html=True)
-
-# Fallback σε Streamlit columns αν οι τοπικές εικόνες φορτώνονται μέσω st.image
 header_col1, header_col2, header_col3 = st.columns([1, 4, 1], vertical_alignment="center")
 
 with header_col1:
     try:
-        st.image("WEST_logo.png", width=140)
+        st.image("WEST_logo.png", use_container_width=True)
     except Exception:
         pass
 
 with header_col2:
-    st.markdown('<h1 class="header-title-style">Allwyn Decluttering Dashboard</h1>', unsafe_allow_html=True)
+    st.markdown('<div class="header-text-style">Allwyn Decluttering Dashboard</div>', unsafe_allow_html=True)
 
 with header_col3:
     try:
-        st.image("ALLWYN_logo.png", width=140)
+        st.image("ALLWYN_logo.png", use_container_width=True)
     except Exception:
         pass
 
@@ -185,7 +168,6 @@ st.markdown("---")
 # ---------------------------------------------------------
 st.sidebar.header("⚙️ Dashboard Filters")
 
-# 1. Φίλτρο Μήνα (Διατήρηση φυσικής σειράς εμφάνισης)
 months_order = [m for m in df_opap["MONTH"].unique() if pd.notna(m)] if "MONTH" in df_opap.columns else []
 
 selected_months = st.sidebar.multiselect("MONTH (Μήνας)", options=months_order, default=[])
@@ -195,7 +177,6 @@ if selected_months:
 else:
     df_month_filtered = df_opap.copy()
 
-# 2. Φίλτρο Εβδομάδας
 if "WEEK_NUM" in df_month_filtered.columns:
     available_weeks = sorted([int(x) for x in df_month_filtered["WEEK_NUM"].dropna().unique()])
 else:
@@ -258,13 +239,11 @@ if not df_opap.empty:
     remaining_active = max(0, total_active_ids - decluttered_count)
     coverage_pct = (decluttered_count / total_active_ids * 100) if total_active_ids > 0 else 0
 
-    # Μετρικές
     c1, c2, c3 = st.columns(3)
     c1.metric("Total active IDs", f"{total_active_ids:,}")
     c2.metric("Decluttered", f"{decluttered_count:,}")
     c3.metric("Coverage %", f"{coverage_pct:.1f}%")
 
-    # Stacked Horizontal Bar
     fig_coverage = go.Figure()
 
     fig_coverage.add_trace(go.Bar(
@@ -272,7 +251,7 @@ if not df_opap.empty:
         x=[decluttered_count],
         name="Decluttered",
         orientation='h',
-        marker=dict(color='#2FDDC0'), # Χρώμα Decluttered
+        marker=dict(color='#2FDDC0'),
         text=f"{decluttered_count:,}",
         textposition='inside',
         insidetextfont=dict(color='white', size=13),
@@ -284,7 +263,7 @@ if not df_opap.empty:
         x=[remaining_active],
         name="Remaining",
         orientation='h',
-        marker=dict(color='#115566'), # Χρώμα Remaining
+        marker=dict(color='#115566'),
         text=f"{remaining_active:,}" if remaining_active > 0 else "",
         textposition='inside',
         insidetextfont=dict(color='white', size=13),
@@ -382,7 +361,7 @@ else:
 st.markdown("---")
 
 # ---------------------------------------------------------
-# 8. ΑΝΑΖΗΤΗΣΗ STORE ID (LOOKER STYLE - ID + WEEKS)
+# 8. ΑΝΑΖΗΤΗΣΗ STORE ID
 # ---------------------------------------------------------
 st.subheader("🔍 Search Store ID")
 
@@ -422,4 +401,3 @@ if "ID" in df_opap.columns:
         st.write(f"**History for Store ID:** `{selected_store_id}`")
         display_cols = [c for c in ["WEEK", "DATE", "MONTH", "STATUS", "ANSWER"] if c in df_single_store.columns]
         st.dataframe(df_single_store[display_cols], use_container_width=True, hide_index=True)
-
