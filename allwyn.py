@@ -140,21 +140,30 @@ else:
 st.subheader("NETWORK COVERAGE")
 
 if not df_opap.empty:
-    # 1. Προετοιμασία & Καθαρισμός IDs σε όλα τα δεδομένα
+    # 1. Προετοιμασία & Καθαρισμός IDs
     df_opap_clean = df_opap.dropna(subset=["ID"]).copy()
     df_opap_clean["ID"] = df_opap_clean["ID"].astype(str).str.strip()
 
-    # 2. XLOOKUP Logic: Ταξινόμηση ανά ημερομηνία/εβδομάδα & keep='last' σε ΟΛΟ το dataset
-    sort_cols = [c for c in ["WEEK_NUM", "DATE_DT"] if c in df_opap_clean.columns]
+    # 2. Εφαρμογή των Φίλτρων του Sidebar (Μήνας / Εβδομάδα) ΠΡΩΤΑ
+    df_filtered_period = df_opap_clean.copy()
+    
+    if selected_months:
+        df_filtered_period = df_filtered_period[df_filtered_period["MONTH"].isin(selected_months)]
+    
+    if selected_weeks:
+        df_filtered_period = df_filtered_period[df_filtered_period["WEEK_NUM"].isin(selected_weeks)]
+
+    # 3. Ταξινόμηση ανά ημερομηνία/εβδομάδα & keep='last' ΣΤΑ ΦΙΛΤΡΑΡΙΣΜΕΝΑ ΔΕΔΟΜΕΝΑ
+    sort_cols = [c for c in ["WEEK_NUM", "DATE_DT"] if c in df_filtered_period.columns]
     if sort_cols:
-        df_opap_sorted = df_opap_clean.sort_values(by=sort_cols, ascending=True)
+        df_sorted = df_filtered_period.sort_values(by=sort_cols, ascending=True)
     else:
-        df_opap_sorted = df_opap_clean.copy()
+        df_sorted = df_filtered_period.copy()
 
-    # Τελευταία επίσκεψη/απάντηση για κάθε ID συνολικά (XLOOKUP match_mode=-1)
-    df_last_responses = df_opap_sorted.drop_duplicates(subset=["ID"], keep="last")
+    # Τελευταία επίσκεψη/απάντηση για κάθε ID ΜΕΣΑ στην επιλεγμένη περίοδο
+    df_last_responses = df_sorted.drop_duplicates(subset=["ID"], keep="last")
 
-    # 3. Τελευταίο Activity Status από το STORE STATUS sheet (αν υπάρχει)
+    # 4. Τελευταίο Activity Status από το STORE STATUS sheet (αν υπάρχει)
     if "ACTIVITY" in df_stores.columns and "ID" in df_stores.columns:
         df_stores_clean = df_stores.dropna(subset=["ID"]).copy()
         df_stores_clean["ID"] = df_stores_clean["ID"].astype(str).str.strip()
@@ -173,17 +182,8 @@ if not df_opap.empty:
         df_merged = df_last_responses.copy()
         df_merged["ACTIVITY"] = "ACTIVE"
 
-    # 4. Εφαρμογή των Φίλτρων του Sidebar (Μήνας / Εβδομάδα)
-    df_final_filtered = df_merged.copy()
-    
-    if selected_months:
-        df_final_filtered = df_final_filtered[df_final_filtered["MONTH"].isin(selected_months)]
-    
-    if selected_weeks:
-        df_final_filtered = df_final_filtered[df_final_filtered["WEEK_NUM"].isin(selected_weeks)]
-
     # 5. Φιλτράρισμα μόνο για ACTIVE καταστήματα
-    df_active = df_final_filtered[df_final_filtered["ACTIVITY"].astype(str).str.strip().str.upper() == "ACTIVE"]
+    df_active = df_merged[df_merged["ACTIVITY"].astype(str).str.strip().str.upper() == "ACTIVE"]
 
     total_active_ids = len(df_active)
 
@@ -247,7 +247,6 @@ if not df_opap.empty:
     )
 
     st.plotly_chart(fig_coverage, use_container_width=True)
-
 # ---------------------------------------------------------
 # 7. ΔΙΑΓΡΑΜΜΑ 2: WEEKLY STACKED BAR
 # ---------------------------------------------------------
