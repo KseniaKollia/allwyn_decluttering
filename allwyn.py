@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import urllib.parse
  
 # ---------------------------------------------------------
-# 1. ΡΥΘΜΙΣΗ ΣΕΛΙΔΑΣ & DESIGN
+# 1. ΡΥΘΜΙΣΗ ΣΕΛΙΔΑΣ & DESIGN (DARK PETROL THEME)
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="DECLUTTERING QUESTION",
@@ -15,56 +15,12 @@ st.set_page_config(
  
 st.markdown("""
     <style>
-    /* Background της εφαρμογής */
     .stApp { background-color: #112229; color: #FFFFFF; }
- 
-    /* 1. HEADER CONTAINER: Λευκό φόντο & Σκούρα γράμματα #115566 */
-    .header-container {
-        background-color: #FFFFFF !important;
-        padding: 15px 25px;
-        border-radius: 10px;
-        margin-bottom: 25px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    
-    .header-title {
-        color: #115566 !important;
-        margin: 0;
-        font-weight: 800;
-        font-size: 28px;
-        text-align: center;
-        flex-grow: 1;
-    }
- 
-    /* 2. DASHBOARD FILTERS (SIDEBAR): Χρώμα #09A1A4 */
-    [data-testid="stSidebar"] label, 
-    [data-testid="stSidebar"] .stMarkdown h1, 
-    [data-testid="stSidebar"] .stMarkdown h2, 
-    [data-testid="stSidebar"] .stMarkdown h3,
-    [data-testid="stSidebar"] p {
-        color: #09A1A4 !important;
-        font-weight: bold;
-    }
- 
-    /* Στυλ των Dropdowns / Selectboxes στο Sidebar */
-    [data-testid="stSidebar"] div[data-baseweb="select"] > div { 
-        background-color: #1A333D !important; 
-        border: 1px solid #09A1A4 !important;
-        color: white !important; 
-    }
- 
-    /* 3. METRICS STYLING */
-    .stMetric { background-color: #1A333D; padding: 15px; border-radius: 8px; border: 1px solid #09A1A4; }
-    .stMetric label { color: #2FDDC0 !important; }
+    div[data-baseweb="select"] > div { background-color: #1A333D !important; color: white !important; }
+    .stMetric { background-color: #1A333D; padding: 15px; border-radius: 8px; border: 1px solid #2A4D59; }
+    .stMetric label { color: #A3C1AD !important; }
     .stMetric div { color: #FFFFFF !important; }
- 
-    /* Γενικά γράμματα στο main body */
-    .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, 
-    .stApp label, .stApp p, .stApp span { 
-        color: #FFFFFF; 
-    }
+    h1, h2, h3, h4, h5, h6, label, p, span { color: #FFFFFF !important; }
     </style>
 """, unsafe_allow_html=True)
  
@@ -80,11 +36,11 @@ def check_password():
  
     st.title("🔒 Περιοχή Πρόσβασης Πελάτη")
     st.write("Please insert the password.")
-   
+    
     with st.form("login_form"):
         password_input = st.text_input("Password:", type="password")
         submit_button = st.form_submit_button("Connect")
-       
+        
         if submit_button:
             expected_password = st.secrets.get("CLIENT_PASSWORD", "AllwynDQ@")
             if password_input == expected_password:
@@ -92,7 +48,7 @@ def check_password():
                 st.rerun()
             else:
                 st.error("🚨 Wrong password.")
-           
+            
     return False
  
 if not check_password():
@@ -106,7 +62,7 @@ SHEET_ID = "1Aw83hnkXT8yaXkKbpVAiCTx7AXT0Z-GXgAwS6r1itNs"
 @st.cache_data(ttl=60)
 def load_sheet_data(worksheet_name):
     encoded_sheet_name = urllib.parse.quote(worksheet_name)
-    url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_sheet_name}"
+    url = fhttps://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_sheet_name}
     df = pd.read_csv(url)
     df.columns = [str(c).strip() for c in df.columns]
     return df
@@ -129,7 +85,7 @@ if "WEEK" in df_opap.columns:
     df_opap["WEEK_NUM"] = pd.to_numeric(df_opap["WEEK"].astype(str).str.extract(r'(\d+)')[0], errors='coerce')
  
 # ---------------------------------------------------------
-# 4. LOGOS & HEADER (ΛΕΥΚΟ ΦΟΝΤΟ + ΣΚΟΥΡΑ ΓΡΑΜΜΑΤΑ)
+# 4. LOGOS & HEADER (ΚΕΝΤΡΑΡΙΣΜΕΝΑ)
 # ---------------------------------------------------------
 header_col1, header_col2, header_col3 = st.columns([1, 4, 1], vertical_alignment="center")
  
@@ -140,11 +96,7 @@ with header_col1:
         pass
  
 with header_col2:
-    st.markdown("""
-        <div class="header-container">
-            <h1 class="header-title">Allwyn Decluttering Dashboard</h1>
-        </div>
-    """, unsafe_allow_html=True)
+    st.title("Allwyn Decluttering Dashboard")
  
 with header_col3:
     try:
@@ -194,10 +146,10 @@ if not df_opap.empty:
  
     # 2. Εφαρμογή των Φίλτρων του Sidebar (Μήνας / Εβδομάδα) ΠΡΩΤΑ
     df_filtered_period = df_opap_clean.copy()
-   
+    
     if selected_months:
         df_filtered_period = df_filtered_period[df_filtered_period["MONTH"].isin(selected_months)]
-   
+    
     if selected_weeks:
         df_filtered_period = df_filtered_period[df_filtered_period["WEEK_NUM"].isin(selected_weeks)]
  
@@ -215,15 +167,15 @@ if not df_opap.empty:
     if "ACTIVITY" in df_stores.columns and "ID" in df_stores.columns:
         df_stores_clean = df_stores.dropna(subset=["ID"]).copy()
         df_stores_clean["ID"] = df_stores_clean["ID"].astype(str).str.strip()
-       
+        
         # Αν υπάρχουν διπλότυπα στο status sheet, κρατάμε το τελευταίο
         df_last_status = df_stores_clean.drop_duplicates(subset=["ID"], keep="last")
-       
+        
         # Merge με τις απαντήσεις
         df_merged = pd.merge(
-            df_last_responses,
-            df_last_status[["ID", "ACTIVITY"]],
-            on="ID",
+            df_last_responses, 
+            df_last_status[["ID", "ACTIVITY"]], 
+            on="ID", 
             how="left"
         )
     else:
@@ -238,7 +190,7 @@ if not df_opap.empty:
     # 6. Υπολογισμός Decluttered
     valid_answers = ["ΝΑΙ", "ΔΕΝ ΥΠΗΡΧΕ ΠΑΛΑΙΟ-ΜΗ ΕΓΚΕΚΡΙΜΕΝΟ ΥΛΙΚΟ"]
     decluttered_ids = df_active[df_active["ANSWER"].isin(valid_answers)]["ID"].unique()
-   
+    
     decluttered_count = len(decluttered_ids)
     remaining_active = max(0, total_active_ids - decluttered_count)
     coverage_pct = (decluttered_count / total_active_ids * 100) if total_active_ids > 0 else 0
@@ -257,7 +209,7 @@ if not df_opap.empty:
         x=[decluttered_count],
         name="Decluttered",
         orientation='h',
-        marker=dict(color='#2FDDC0'), # Νέο χρώμα Decluttered
+        marker=dict(color='#2FDDC0'),  # Νέο χρώμα Decluttered
         text=f"{decluttered_count:,}",
         textposition='inside',
         insidetextfont=dict(color='white', size=13),
@@ -269,7 +221,7 @@ if not df_opap.empty:
         x=[remaining_active],
         name="Remaining",
         orientation='h',
-        marker=dict(color='#115566'), # Νέο χρώμα Remaining
+        marker=dict(color='#115566'),  # Νέο χρώμα Remaining
         text=f"{remaining_active:,}" if remaining_active > 0 else "",
         textposition='inside',
         insidetextfont=dict(color='white', size=13),
@@ -295,7 +247,6 @@ if not df_opap.empty:
     )
  
     st.plotly_chart(fig_coverage, use_container_width=True)
- 
 # ---------------------------------------------------------
 # 7. ΔΙΑΓΡΑΜΜΑ 2: WEEKLY STACKED BAR
 # ---------------------------------------------------------
@@ -308,7 +259,6 @@ if "WEEK_NUM" in df_filtered.columns and "ANSWER" in df_filtered.columns and not
  
     totals = df_chart.groupby("WEEK_LABEL")["Count"].sum().reset_index(name="Total")
  
-    # Νέα παλέτα 3 χρωμάτων (#2FDDC0, #09A1A4, #115566)
     color_map = {
         "ΝΑΙ": "#2FDDC0",
         "ΔΕΝ ΥΠΗΡΧΕ ΠΑΛΑΙΟ-ΜΗ ΕΓΚΕΚΡΙΜΕΝΟ ΥΛΙΚΟ": "#09A1A4",
@@ -375,31 +325,31 @@ st.subheader("🔍 Search Store ID")
 if "ID" in df_opap.columns:
     # Υπολογισμός πλήθους εβδομάδων/εγγραφών ανά ID για τη λίστα επιλογής
     id_counts = df_opap.groupby("ID").size().to_dict()
-   
+    
     # Δημιουργία λίστας με τη μορφή: "233264 (3 weeks)"
     formatted_options = []
-    store_map = {} # Χάρτης για επιστροφή από το κείμενο στο αρχικό ID
-   
+    store_map = {}  # Χάρτης για επιστροφή από το κείμενο στο αρχικό ID
+    
     sorted_ids = sorted([str(x) for x in df_opap["ID"].dropna().unique()])
-   
+    
     for sid in sorted_ids:
         count = id_counts.get(int(sid) if sid.isdigit() else sid, 0)
-        label = f"{sid} — ({count} weeks)"
+        label = f"{sid}  —  ({count} weeks)"
         formatted_options.append(label)
         store_map[label] = sid
  
     selected_option = st.selectbox(
-        "Select or Search Store ID:",
+        "Select or Search Store ID:", 
         options=["-- Choose Store ID --"] + formatted_options
     )
  
     if selected_option != "-- Choose Store ID --":
         selected_store_id = store_map[selected_option]
         df_single_store = df_opap[df_opap["ID"].astype(str) == selected_store_id].copy()
-       
+        
         if "WEEK_NUM" in df_single_store.columns:
             df_single_store = df_single_store.sort_values(by="WEEK_NUM")
-           
+            
         total_visits = len(df_single_store)
         unique_weeks_count = df_single_store["WEEK_NUM"].nunique() if "WEEK_NUM" in df_single_store.columns else 0
  
