@@ -14,25 +14,31 @@ st.set_page_config(
 )
 
 st.markdown("""
+    /* Εισαγωγή Google Fonts που προσεγγίζουν τη γραμματοσειρά της Allwyn */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Montserrat:wght@800&display=swap');
+
     <style>
     /* Background της εφαρμογής */
     .stApp { background-color: #112229; color: #FFFFFF; }
 
-    /* 1. ΕΝΙΑΙΟ ΛΕΥΚΟ HEADER BANNER (Περιλαμβάνει Logos & Τίτλο) */
+    /* 1. HEADER BANNER (#1A333D background) */
     div[data-testid="stHorizontalBlock"]:has(.header-text-style) {
-        background-color: #FFFFFF !important;
-        padding: 12px 25px !important;
-        border-radius: 8px !important;
-        margin-bottom: 20px !important;
+        background-color: #1A333D !important;
+        padding: 18px 25px !important;
+        border-radius: 10px !important;
+        border: 1px solid #09A1A4 !important;
+        margin-bottom: 25px !important;
         align-items: center !important;
     }
 
-    /* Τίτλος Dashboard - Χρώμα Remaining (#115566) & Κεντραρισμένος */
+    /* Τίτλος Dashboard: Λευκά γράμματα, Μεγάλο μέγεθος, Allwyn Font Style */
     .header-text-style {
-        color: #115566 !important;
+        color: #FFFFFF !important;
+        font-family: 'Outfit', 'Montserrat', 'Inter', sans-serif !important;
         font-weight: 800 !important;
-        font-size: 28px !important;
+        font-size: 34px !important;
         text-align: center !important;
+        letter-spacing: 0.5px !important;
         margin: 0 !important;
         padding: 0 !important;
         display: block !important;
@@ -68,7 +74,7 @@ st.markdown("""
         background-color: #1A333D !important; 
         padding: 15px !important; 
         border-radius: 8px !important; 
-        border: 2px solid #2FDDC0 !important; /* Χρώμα Decluttered */
+        border: 2px solid #2FDDC0 !important;
     }
     [data-testid="stMetricLabel"] p { color: #2FDDC0 !important; font-weight: bold; }
     [data-testid="stMetricValue"] div { color: #FFFFFF !important; }
@@ -131,13 +137,11 @@ except Exception as e:
     st.error(f"Error loading Google Sheet: {e}")
     st.stop()
 
-# Μετατροπή ημερομηνίας & Μήνα
 if "DATE" in df_opap.columns:
     df_opap["DATE_DT"] = pd.to_datetime(df_opap["DATE"], format="%d/%m/%Y", errors='coerce')
     df_opap["DATE_DT"] = df_opap["DATE_DT"].fillna(pd.to_datetime(df_opap["DATE"], dayfirst=True, errors='coerce'))
     df_opap["MONTH"] = df_opap["DATE_DT"].dt.strftime('%B %Y')
 
-# Καθαρισμός στήλης WEEK
 if "WEEK" in df_opap.columns:
     df_opap["WEEK_NUM"] = pd.to_numeric(df_opap["WEEK"].astype(str).str.extract(r'(\d+)')[0], errors='coerce')
 
