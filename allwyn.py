@@ -13,10 +13,9 @@ st.set_page_config(
     page_icon="📈"
 )
 
-# Καθαρό CSS Injection
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Inter:wght@800&display=swap');
 
     /* Background της εφαρμογής */
     .stApp { 
@@ -24,20 +23,20 @@ st.markdown("""
         color: #FFFFFF; 
     }
 
-    /* 1. HEADER BANNER - ΙΔΙΟ ΧΡΩΜΑ ΜΕ ΤΟ ΦΟΝΤΟ (#112229) */
+    /* 1. HEADER BANNER (Ίδιο χρώμα φόντου #112229 με όλο το app) */
     div[data-testid="stHorizontalBlock"]:has(.header-text-style) {
         background-color: #112229 !important;
-        padding: 10px 10px !important;
-        margin-bottom: 20px !important;
+        padding: 10px 0px 20px 0px !important;
         align-items: center !important;
+        border: none !important;
     }
 
-    /* Τίτλος Dashboard: Λευκά γράμματα, Μεγάλο μέγεθος, Allwyn Font Style (Montserrat) */
+    /* Τίτλος Dashboard: Λευκά γράμματα, Πολύ Μεγάλο μέγεθος, Allwyn Style */
     .header-text-style {
         color: #FFFFFF !important;
         font-family: 'Montserrat', 'Inter', sans-serif !important;
-        font-weight: 800 !important;
-        font-size: 38px !important;
+        font-weight: 900 !important;
+        font-size: 40px !important;
         text-align: center !important;
         letter-spacing: 0.5px !important;
         margin: 0 !important;
