@@ -13,15 +13,18 @@ st.set_page_config(
     page_icon="📈"
 )
 
+# Καθαρό CSS Injection χωρίς λάθη σύνταξης
 st.markdown("""
-    /* Εισαγωγή Google Fonts που προσεγγίζουν τη γραμματοσειρά της Allwyn */
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Montserrat:wght@800&display=swap');
-
     <style>
-    /* Background της εφαρμογής */
-    .stApp { background-color: #112229; color: #FFFFFF; }
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@700;800&display=swap');
 
-    /* 1. HEADER BANNER (#1A333D background) */
+    /* Background της εφαρμογής */
+    .stApp { 
+        background-color: #112229; 
+        color: #FFFFFF; 
+    }
+
+    /* 1. HEADER BANNER (#1A333D background - ίδιο με τα κουτιά) */
     div[data-testid="stHorizontalBlock"]:has(.header-text-style) {
         background-color: #1A333D !important;
         padding: 18px 25px !important;
@@ -34,9 +37,9 @@ st.markdown("""
     /* Τίτλος Dashboard: Λευκά γράμματα, Μεγάλο μέγεθος, Allwyn Font Style */
     .header-text-style {
         color: #FFFFFF !important;
-        font-family: 'Outfit', 'Montserrat', 'Inter', sans-serif !important;
+        font-family: 'Montserrat', 'Inter', sans-serif !important;
         font-weight: 800 !important;
-        font-size: 34px !important;
+        font-size: 36px !important;
         text-align: center !important;
         letter-spacing: 0.5px !important;
         margin: 0 !important;
@@ -405,3 +408,4 @@ if "ID" in df_opap.columns:
         st.write(f"**History for Store ID:** `{selected_store_id}`")
         display_cols = [c for c in ["WEEK", "DATE", "MONTH", "STATUS", "ANSWER"] if c in df_single_store.columns]
         st.dataframe(df_single_store[display_cols], use_container_width=True, hide_index=True)
+
