@@ -13,42 +13,41 @@ st.set_page_config(
     page_icon="📈"
 )
 
-# Καθαρό CSS Injection χωρίς λάθη σύνταξης
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@700;800&display=swap');
 
-    /* Background της εφαρμογής */
+    /* Background εφαρμογής */
     .stApp { 
         background-color: #112229; 
         color: #FFFFFF; 
     }
 
-    /* 1. HEADER BANNER (#1A333D background - ίδιο με τα κουτιά) */
-    div[data-testid="stHorizontalBlock"]:has(.header-text-style) {
-        background-color: #1A333D !important;
-        padding: 18px 25px !important;
-        border-radius: 10px !important;
-        border: 1px solid #09A1A4 !important;
-        margin-bottom: 25px !important;
-        align-items: center !important;
+    /* 1. HEADER BANNER CONTAINERS (#1A333D) */
+    .header-box {
+        background-color: #1A333D;
+        padding: 15px 20px;
+        border-radius: 10px;
+        border: 1px solid #09A1A4;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
-    /* Τίτλος Dashboard: Λευκά γράμματα, Μεγάλο μέγεθος, Allwyn Font Style */
-    .header-text-style {
+    .header-title-text {
         color: #FFFFFF !important;
         font-family: 'Montserrat', 'Inter', sans-serif !important;
         font-weight: 800 !important;
-        font-size: 36px !important;
+        font-size: 32px !important;
         text-align: center !important;
         letter-spacing: 0.5px !important;
         margin: 0 !important;
         padding: 0 !important;
-        display: block !important;
-        width: 100% !important;
+        width: 100%;
     }
 
-    /* 2. DASHBOARD FILTERS (SIDEBAR STYLING - Χρώμα #09A1A4) */
+    /* 2. SIDEBAR STYLING (#09A1A4) */
     [data-testid="stSidebar"] {
         background-color: #0E1A1F !important;
     }
@@ -72,7 +71,7 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    /* 3. METRICS STYLING (Περίγραμμα με το χρώμα του Decluttered #2FDDC0) */
+    /* 3. METRICS STYLING (#2FDDC0 Border & #1A333D Background) */
     [data-testid="stMetric"] { 
         background-color: #1A333D !important; 
         padding: 15px !important; 
@@ -82,7 +81,7 @@ st.markdown("""
     [data-testid="stMetricLabel"] p { color: #2FDDC0 !important; font-weight: bold; }
     [data-testid="stMetricValue"] div { color: #FFFFFF !important; }
 
-    /* Γενικά γράμματα στο main body */
+    /* Γενικά κείμενα */
     .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, 
     .stApp label, .stApp p, .stApp span { 
         color: #FFFFFF; 
@@ -160,7 +159,7 @@ with header_col1:
         pass
 
 with header_col2:
-    st.markdown('<div class="header-text-style">Allwyn Decluttering Dashboard</div>', unsafe_allow_html=True)
+    st.markdown('<div class="header-title-text">Allwyn Decluttering Dashboard</div>', unsafe_allow_html=True)
 
 with header_col3:
     try:
@@ -171,7 +170,7 @@ with header_col3:
 st.markdown("---")
 
 # ---------------------------------------------------------
-# 5. SIDEBAR - ΦΙΛΤΡΑ (#09A1A4 STYLING)
+# 5. SIDEBAR - ΦΙΛΤΡΑ
 # ---------------------------------------------------------
 st.sidebar.header("⚙️ Dashboard Filters")
 
@@ -408,4 +407,3 @@ if "ID" in df_opap.columns:
         st.write(f"**History for Store ID:** `{selected_store_id}`")
         display_cols = [c for c in ["WEEK", "DATE", "MONTH", "STATUS", "ANSWER"] if c in df_single_store.columns]
         st.dataframe(df_single_store[display_cols], use_container_width=True, hide_index=True)
-
