@@ -13,41 +13,40 @@ st.set_page_config(
     page_icon="📈"
 )
 
+# Καθαρό CSS Injection
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@700;800&display=swap');
 
-    /* Background εφαρμογής */
+    /* Background της εφαρμογής */
     .stApp { 
         background-color: #112229; 
         color: #FFFFFF; 
     }
 
-    /* 1. HEADER BANNER CONTAINERS (#1A333D) */
-    .header-box {
-        background-color: #1A333D;
-        padding: 15px 20px;
-        border-radius: 10px;
-        border: 1px solid #09A1A4;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+    /* 1. HEADER BANNER - ΙΔΙΟ ΧΡΩΜΑ ΜΕ ΤΟ ΦΟΝΤΟ (#112229) */
+    div[data-testid="stHorizontalBlock"]:has(.header-text-style) {
+        background-color: #112229 !important;
+        padding: 10px 10px !important;
+        margin-bottom: 20px !important;
+        align-items: center !important;
     }
 
-    .header-title-text {
+    /* Τίτλος Dashboard: Λευκά γράμματα, Μεγάλο μέγεθος, Allwyn Font Style (Montserrat) */
+    .header-text-style {
         color: #FFFFFF !important;
         font-family: 'Montserrat', 'Inter', sans-serif !important;
         font-weight: 800 !important;
-        font-size: 32px !important;
+        font-size: 38px !important;
         text-align: center !important;
         letter-spacing: 0.5px !important;
         margin: 0 !important;
         padding: 0 !important;
-        width: 100%;
+        display: block !important;
+        width: 100% !important;
     }
 
-    /* 2. SIDEBAR STYLING (#09A1A4) */
+    /* 2. DASHBOARD FILTERS (SIDEBAR STYLING - Χρώμα #09A1A4) */
     [data-testid="stSidebar"] {
         background-color: #0E1A1F !important;
     }
@@ -71,7 +70,7 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    /* 3. METRICS STYLING (#2FDDC0 Border & #1A333D Background) */
+    /* 3. METRICS STYLING (Περίγραμμα με το χρώμα του Decluttered #2FDDC0) */
     [data-testid="stMetric"] { 
         background-color: #1A333D !important; 
         padding: 15px !important; 
@@ -81,7 +80,7 @@ st.markdown("""
     [data-testid="stMetricLabel"] p { color: #2FDDC0 !important; font-weight: bold; }
     [data-testid="stMetricValue"] div { color: #FFFFFF !important; }
 
-    /* Γενικά κείμενα */
+    /* Γενικά γράμματα στο main body */
     .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, 
     .stApp label, .stApp p, .stApp span { 
         color: #FFFFFF; 
@@ -159,7 +158,7 @@ with header_col1:
         pass
 
 with header_col2:
-    st.markdown('<div class="header-title-text">Allwyn Decluttering Dashboard</div>', unsafe_allow_html=True)
+    st.markdown('<div class="header-text-style">Allwyn Decluttering Dashboard</div>', unsafe_allow_html=True)
 
 with header_col3:
     try:
@@ -170,7 +169,7 @@ with header_col3:
 st.markdown("---")
 
 # ---------------------------------------------------------
-# 5. SIDEBAR - ΦΙΛΤΡΑ
+# 5. SIDEBAR - ΦΙΛΤΡΑ (#09A1A4 STYLING)
 # ---------------------------------------------------------
 st.sidebar.header("⚙️ Dashboard Filters")
 
