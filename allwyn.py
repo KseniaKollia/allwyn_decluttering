@@ -139,22 +139,59 @@ else:
 # ---------------------------------------------------------
 st.subheader("NETWORK COVERAGE")
 
-if not df_filtered.empty:
-    # 1. Total Active IDs
-    if "ACTIVITY" in df_stores.columns:
-        total_active_ids = len(df_stores[df_stores["ACTIVITY"].astype(str).str.upper() == "ACTIVE"]["ID"].unique())
+if not df_opap.empty:
+    # 1. Προετοιμασία & Καθαρισμός IDs σε όλα τα δεδομένα
+    df_opap_clean = df_opap.dropna(subset=["ID"]).copy()
+    df_opap_clean["ID"] = df_opap_clean["ID"].astype(str).str.strip()
+
+    # 2. XLOOKUP Logic: Ταξινόμηση ανά ημερομηνία/εβδομάδα & keep='last' σε ΟΛΟ το dataset
+    sort_cols = [c for c in ["WEEK_NUM", "DATE_DT"] if c in df_opap_clean.columns]
+    if sort_cols:
+        df_opap_sorted = df_opap_clean.sort_values(by=sort_cols, ascending=True)
     else:
-        total_active_ids = len(df_opap["ID"].unique())
+        df_opap_sorted = df_opap_clean.copy()
 
-    # 2. Κρατάμε ΑΠΕΥΘΕΙΑΣ την τελευταία εγγραφή κάθε ID
-    df_latest_visits = df_filtered.drop_duplicates(subset=["ID"], keep="last")
+    # Τελευταία επίσκεψη/απάντηση για κάθε ID συνολικά (XLOOKUP match_mode=-1)
+    df_last_responses = df_opap_sorted.drop_duplicates(subset=["ID"], keep="last")
 
-    # 3. Decluttered IDs
+    # 3. Τελευταίο Activity Status από το STORE STATUS sheet (αν υπάρχει)
+    if "ACTIVITY" in df_stores.columns and "ID" in df_stores.columns:
+        df_stores_clean = df_stores.dropna(subset=["ID"]).copy()
+        df_stores_clean["ID"] = df_stores_clean["ID"].astype(str).str.strip()
+        
+        # Αν υπάρχουν διπλότυπα στο status sheet, κρατάμε το τελευταίο
+        df_last_status = df_stores_clean.drop_duplicates(subset=["ID"], keep="last")
+        
+        # Merge με τις απαντήσεις
+        df_merged = pd.merge(
+            df_last_responses, 
+            df_last_status[["ID", "ACTIVITY"]], 
+            on="ID", 
+            how="left"
+        )
+    else:
+        df_merged = df_last_responses.copy()
+        df_merged["ACTIVITY"] = "ACTIVE"
+
+    # 4. Εφαρμογή των Φίλτρων του Sidebar (Μήνας / Εβδομάδα)
+    df_final_filtered = df_merged.copy()
+    
+    if selected_months:
+        df_final_filtered = df_final_filtered[df_final_filtered["MONTH"].isin(selected_months)]
+    
+    if selected_weeks:
+        df_final_filtered = df_final_filtered[df_final_filtered["WEEK_NUM"].isin(selected_weeks)]
+
+    # 5. Φιλτράρισμα μόνο για ACTIVE καταστήματα
+    df_active = df_final_filtered[df_final_filtered["ACTIVITY"].astype(str).str.strip().str.upper() == "ACTIVE"]
+
+    total_active_ids = len(df_active)
+
+    # 6. Υπολογισμός Decluttered
     valid_answers = ["ΝΑΙ", "ΔΕΝ ΥΠΗΡΧΕ ΠΑΛΑΙΟ-ΜΗ ΕΓΚΕΚΡΙΜΕΝΟ ΥΛΙΚΟ"]
-    decluttered_ids = df_latest_visits[df_latest_visits["ANSWER"].isin(valid_answers)]["ID"].unique()
+    decluttered_ids = df_active[df_active["ANSWER"].isin(valid_answers)]["ID"].unique()
     
     decluttered_count = len(decluttered_ids)
-    decluttered_count = min(decluttered_count, total_active_ids)
     remaining_active = max(0, total_active_ids - decluttered_count)
     coverage_pct = (decluttered_count / total_active_ids * 100) if total_active_ids > 0 else 0
 
@@ -199,7 +236,7 @@ if not df_filtered.empty:
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(color='white'),
         xaxis=dict(
-            range=[0, total_active_ids * 1.02],
+            range=[0, max(total_active_ids, decluttered_count) * 1.02 if total_active_ids > 0 else 100],
             title="Total Active IDs",
             showgrid=False,
             color='white'
@@ -210,8 +247,6 @@ if not df_filtered.empty:
     )
 
     st.plotly_chart(fig_coverage, use_container_width=True)
-
-st.markdown("---")
 
 # ---------------------------------------------------------
 # 7. ΔΙΑΓΡΑΜΜΑ 2: WEEKLY STACKED BAR
