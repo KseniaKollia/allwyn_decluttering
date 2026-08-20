@@ -209,7 +209,7 @@ if not df_opap.empty:
         x=[decluttered_count],
         name="Decluttered",
         orientation='h',
-        marker=dict(color='#20B2AA'),
+        marker=dict(color='#2FDDC0'),  # Νέο χρώμα Decluttered
         text=f"{decluttered_count:,}",
         textposition='inside',
         insidetextfont=dict(color='white', size=13),
@@ -221,7 +221,7 @@ if not df_opap.empty:
         x=[remaining_active],
         name="Remaining",
         orientation='h',
-        marker=dict(color='#1B4D54'),
+        marker=dict(color='#115566'),  # Νέο χρώμα Remaining
         text=f"{remaining_active:,}" if remaining_active > 0 else "",
         textposition='inside',
         insidetextfont=dict(color='white', size=13),
@@ -260,9 +260,9 @@ if "WEEK_NUM" in df_filtered.columns and "ANSWER" in df_filtered.columns and not
     totals = df_chart.groupby("WEEK_LABEL")["Count"].sum().reset_index(name="Total")
 
     color_map = {
-        "ΝΑΙ": "#2EE6B6",
-        "ΔΕΝ ΥΠΗΡΧΕ ΠΑΛΑΙΟ-ΜΗ ΕΓΚΕΚΡΙΜΕΝΟ ΥΛΙΚΟ": "#178A8E",
-        "ΟΧΙ": "#0F3843"
+        "ΝΑΙ": "#2FDDC0",
+        "ΔΕΝ ΥΠΗΡΧΕ ΠΑΛΑΙΟ-ΜΗ ΕΓΚΕΚΡΙΜΕΝΟ ΥΛΙΚΟ": "#09A1A4",
+        "ΟΧΙ": "#115566"
     }
 
     fig_weekly = px.bar(
