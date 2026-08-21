@@ -33,12 +33,13 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(47, 221, 192, 0.2) !important;
     }
 
-    /* HEADER BANNER */
+    /* HEADER BANNER - Αλλαγή σε #1A333D (ίδιο με το κουτί των Metrics) */
     div[data-testid="stHorizontalBlock"]:has(.header-text-style) {
-        background-color: #112229 !important;
-        padding: 10px 0px 20px 0px !important;
+        background-color: #1A333D !important;
+        padding: 15px 20px !important;
         align-items: center !important;
-        border: none !important;
+        border-radius: 10px !important;
+        border: 1px solid #2FDDC0 !important; /* Προαιρετικό περίγραμμα για να ταιριάζει με τα metrics */
     }
 
     .header-text-style {
@@ -78,7 +79,7 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    /* METRICS STYLING */
+    /* METRICS STYLING (#1A333D) */
     [data-testid="stMetric"] { 
         background-color: #1A333D !important; 
         padding: 15px !important; 
