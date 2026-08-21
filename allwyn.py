@@ -45,7 +45,7 @@ st.markdown("""
 
     /* ΤΙΤΛΟΣ ΜΕ PP PANGRAM SANS */
     .header-text-style {
-        color: #FFFFFF !important;
+        color: #2FDDC0 !important;
         font-family: 'PP Pangram Sans', 'Pangram', sans-serif !important;
         font-weight: 500 !important; /* Πιο λεπτό πάχος */
         font-size: 36px !important;  /* Πιο κομψό μέγεθος */
