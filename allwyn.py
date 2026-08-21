@@ -15,7 +15,8 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Inter:wght@800&display=swap');
+    /* Εισαγωγή της γραμματοσειράς Outfit από το Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@800;900&display=swap');
 
     /* Background της εφαρμογής */
     .stApp { 
@@ -33,22 +34,24 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(47, 221, 192, 0.2) !important;
     }
 
-    /* HEADER BANNER - Αλλαγή σε #1A333D (ίδιο με το κουτί των Metrics) */
+    /* HEADER BANNER (#1A333D) */
     div[data-testid="stHorizontalBlock"]:has(.header-text-style) {
         background-color: #1A333D !important;
         padding: 15px 20px !important;
         align-items: center !important;
         border-radius: 10px !important;
-        border: 1px solid #2FDDC0 !important; /* Προαιρετικό περίγραμμα για να ταιριάζει με τα metrics */
+        border: 1px solid #2FDDC0 !important;
     }
 
+    /* ΤΙΤΛΟΣ ΜΕ ΓΡΑΜΜΑΤΟΣΕΙΡΑ ΤΥΠΟΥ ALLWYN */
     .header-text-style {
         color: #FFFFFF !important;
-        font-family: 'Montserrat', 'Inter', sans-serif !important;
+        font-family: 'Outfit', sans-serif !important;
         font-weight: 900 !important;
         font-size: 38px !important;
+        text-transform: uppercase !important; /* Κάνει τους χαρακτήρες κεφαλαίους όπως το brand */
         text-align: center !important;
-        letter-spacing: 0.5px !important;
+        letter-spacing: 1px !important;
         margin: 0 !important;
         padding: 0 !important;
         display: block !important;
