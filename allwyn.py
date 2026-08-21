@@ -547,7 +547,7 @@ if "REGION" in df_opap.columns and not df_opap.empty:
             margin=dict(l=10, r=10, t=20, b=10)
         )
 
-        st.plotly_chart(fig_map, use_container_width=True)
+        st.plotly_chart(fig_map, use_container_width=True, config={'scrollZoom': True})
     else:
         st.info("Δεν υπάρχουν δεδομένα με έγκυρη περιοχή για τα επιλεγμένα φίλτρα.")
 
