@@ -319,7 +319,50 @@ if not df_opap.empty:
     st.plotly_chart(fig_coverage, use_container_width=True)
 
 # ---------------------------------------------------------
-# 7. ΔΙΑΓΡΑΜΜΑ 2: WEEKLY STACKED BAR
+# 7. ΑΝΑΖΗΤΗΣΗ STORE ID
+# ---------------------------------------------------------
+st.subheader("🔍 Search Store ID")
+
+if "ID" in df_opap.columns:
+    id_counts = df_opap.groupby("ID").size().to_dict()
+    
+    formatted_options = []
+    store_map = {}
+    
+    sorted_ids = sorted([str(x) for x in df_opap["ID"].dropna().unique()])
+    
+    for sid in sorted_ids:
+        count = id_counts.get(int(sid) if sid.isdigit() else sid, 0)
+        label = f"{sid} — ({count} weeks)"
+        formatted_options.append(label)
+        store_map[label] = sid
+
+    selected_option = st.selectbox(
+        "Select or Search Store ID:",
+        options=["-- Choose Store ID --"] + formatted_options
+    )
+
+    if selected_option != "-- Choose Store ID --":
+        selected_store_id = store_map[selected_option]
+        df_single_store = df_opap[df_opap["ID"].astype(str) == selected_store_id].copy()
+        
+        if "WEEK_NUM" in df_single_store.columns:
+            df_single_store = df_single_store.sort_values(by="WEEK_NUM")
+            
+        total_visits = len(df_single_store)
+        unique_weeks_count = df_single_store["WEEK_NUM"].nunique() if "WEEK_NUM" in df_single_store.columns else 0
+
+        s_col1, s_col2 = st.columns(2)
+        s_col1.metric("Total Visits", total_visits)
+        s_col2.metric("Visited in Weeks (Count)", f"{unique_weeks_count} weeks")
+
+        st.write(f"**History for Store ID:** `{selected_store_id}`")
+        display_cols = [c for c in ["WEEK", "DATE", "MONTH", "STATUS", "ANSWER"] if c in df_single_store.columns]
+        st.dataframe(df_single_store[display_cols], use_container_width=True, hide_index=True)
+
+
+# ---------------------------------------------------------
+# 8. ΔΙΑΓΡΑΜΜΑ 2: WEEKLY STACKED BAR
 # ---------------------------------------------------------
 st.subheader("ΑΦΑΙΡΕΘΗΚΕ ΤΥΧΟΝ ΤΟΠΟΘΕΤΗΜΕΝΟ ΠΑΛΑΙΟ Η ΜΗ ΕΓΚΡΚΡΙΜΕΝΟ ΥΛΙΚΟ (ΑΦΙΣΕΣ) ΑΠΟ ΤΟ ΚΑΤΑΣΤΗΜΑ ?")
 
@@ -386,8 +429,9 @@ if "WEEK_NUM" in df_filtered.columns and "ANSWER" in df_filtered.columns and not
 else:
     st.info("No data available for the selected filters.")
 
+
 # ---------------------------------------------------------
-# 8. ΧΑΡΤΗΣ ΚΑΛΥΨΗΣ ΑΝΑ REGION (BASED ON UNIQUE STORES LIKE NETWORK COVERAGE)
+# 9. ΧΑΡΤΗΣ ΚΑΛΥΨΗΣ ΑΝΑ REGION (BASED ON UNIQUE STORES LIKE NETWORK COVERAGE)
 # ---------------------------------------------------------
 if "REGION" in df_opap.columns and not df_opap.empty:
     st.markdown("---")
@@ -508,44 +552,3 @@ if "REGION" in df_opap.columns and not df_opap.empty:
 
 st.markdown("---")
 
-# ---------------------------------------------------------
-# 9. ΑΝΑΖΗΤΗΣΗ STORE ID
-# ---------------------------------------------------------
-st.subheader("🔍 Search Store ID")
-
-if "ID" in df_opap.columns:
-    id_counts = df_opap.groupby("ID").size().to_dict()
-    
-    formatted_options = []
-    store_map = {}
-    
-    sorted_ids = sorted([str(x) for x in df_opap["ID"].dropna().unique()])
-    
-    for sid in sorted_ids:
-        count = id_counts.get(int(sid) if sid.isdigit() else sid, 0)
-        label = f"{sid} — ({count} weeks)"
-        formatted_options.append(label)
-        store_map[label] = sid
-
-    selected_option = st.selectbox(
-        "Select or Search Store ID:",
-        options=["-- Choose Store ID --"] + formatted_options
-    )
-
-    if selected_option != "-- Choose Store ID --":
-        selected_store_id = store_map[selected_option]
-        df_single_store = df_opap[df_opap["ID"].astype(str) == selected_store_id].copy()
-        
-        if "WEEK_NUM" in df_single_store.columns:
-            df_single_store = df_single_store.sort_values(by="WEEK_NUM")
-            
-        total_visits = len(df_single_store)
-        unique_weeks_count = df_single_store["WEEK_NUM"].nunique() if "WEEK_NUM" in df_single_store.columns else 0
-
-        s_col1, s_col2 = st.columns(2)
-        s_col1.metric("Total Visits", total_visits)
-        s_col2.metric("Visited in Weeks (Count)", f"{unique_weeks_count} weeks")
-
-        st.write(f"**History for Store ID:** `{selected_store_id}`")
-        display_cols = [c for c in ["WEEK", "DATE", "MONTH", "STATUS", "ANSWER"] if c in df_single_store.columns]
-        st.dataframe(df_single_store[display_cols], use_container_width=True, hide_index=True)
