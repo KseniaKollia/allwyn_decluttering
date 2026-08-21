@@ -361,7 +361,6 @@ if "ID" in df_opap.columns:
         display_cols = [c for c in ["WEEK", "DATE", "MONTH", "STATUS", "ANSWER"] if c in df_single_store.columns]
         st.dataframe(df_single_store[display_cols], use_container_width=True, hide_index=True)
 
-
 # ---------------------------------------------------------
 # 8. ΔΙΑΓΡΑΜΜΑ 2: WEEKLY STACKED BAR
 # ---------------------------------------------------------
@@ -552,4 +551,3 @@ if "REGION" in df_opap.columns and not df_opap.empty:
         st.info("Δεν υπάρχουν δεδομένα με έγκυρη περιοχή για τα επιλεγμένα φίλτρα.")
 
 st.markdown("---")
-
