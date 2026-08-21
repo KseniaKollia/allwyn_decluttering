@@ -23,7 +23,17 @@ st.markdown("""
         color: #FFFFFF; 
     }
 
-    /* 1. HEADER BANNER (Ίδιο χρώμα φόντου #112229 με όλο το app) */
+    /* ΠΕΡΙΓΡΑΜΜΑ ΣΕ ΟΛΟ ΤΟ DASHBOARD (#2FDDC0) */
+    .main .block-container {
+        border: 2px solid #2FDDC0 !important;
+        border-radius: 15px !important;
+        padding: 30px !important;
+        margin-top: 15px !important;
+        background-color: #112229 !important;
+        box-shadow: 0 0 15px rgba(47, 221, 192, 0.2) !important;
+    }
+
+    /* HEADER BANNER */
     div[data-testid="stHorizontalBlock"]:has(.header-text-style) {
         background-color: #112229 !important;
         padding: 10px 0px 20px 0px !important;
@@ -31,12 +41,11 @@ st.markdown("""
         border: none !important;
     }
 
-    /* Τίτλος Dashboard: Λευκά γράμματα, Πολύ Μεγάλο μέγεθος, Allwyn Style */
     .header-text-style {
         color: #FFFFFF !important;
         font-family: 'Montserrat', 'Inter', sans-serif !important;
         font-weight: 900 !important;
-        font-size: 40px !important;
+        font-size: 38px !important;
         text-align: center !important;
         letter-spacing: 0.5px !important;
         margin: 0 !important;
@@ -45,7 +54,7 @@ st.markdown("""
         width: 100% !important;
     }
 
-    /* 2. DASHBOARD FILTERS (SIDEBAR STYLING - Χρώμα #09A1A4) */
+    /* SIDEBAR STYLING (#09A1A4) */
     [data-testid="stSidebar"] {
         background-color: #0E1A1F !important;
     }
@@ -69,7 +78,7 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    /* 3. METRICS STYLING (Περίγραμμα με το χρώμα του Decluttered #2FDDC0) */
+    /* METRICS STYLING */
     [data-testid="stMetric"] { 
         background-color: #1A333D !important; 
         padding: 15px !important; 
@@ -79,7 +88,6 @@ st.markdown("""
     [data-testid="stMetricLabel"] p { color: #2FDDC0 !important; font-weight: bold; }
     [data-testid="stMetricValue"] div { color: #FFFFFF !important; }
 
-    /* Γενικά γράμματα στο main body */
     .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, 
     .stApp label, .stApp p, .stApp span { 
         color: #FFFFFF; 
@@ -99,11 +107,11 @@ def check_password():
 
     st.title("🔒 Περιοχή Πρόσβασης Πελάτη")
     st.write("Please insert the password.")
-   
+    
     with st.form("login_form"):
         password_input = st.text_input("Password:", type="password")
         submit_button = st.form_submit_button("Connect")
-       
+        
         if submit_button:
             expected_password = st.secrets.get("CLIENT_PASSWORD", "AllwynDQ@")
             if password_input == expected_password:
@@ -111,7 +119,7 @@ def check_password():
                 st.rerun()
             else:
                 st.error("🚨 Wrong password.")
-           
+            
     return False
 
 if not check_password():
@@ -168,12 +176,11 @@ with header_col3:
 st.markdown("---")
 
 # ---------------------------------------------------------
-# 5. SIDEBAR - ΦΙΛΤΡΑ (#09A1A4 STYLING)
+# 5. SIDEBAR - ΦΙΛΤΡΑ (#09A1A4 STYLING) & EXPORT DATA
 # ---------------------------------------------------------
 st.sidebar.header("⚙️ Dashboard Filters")
 
 months_order = [m for m in df_opap["MONTH"].unique() if pd.notna(m)] if "MONTH" in df_opap.columns else []
-
 selected_months = st.sidebar.multiselect("MONTH (Μήνας)", options=months_order, default=[])
 
 if selected_months:
@@ -193,6 +200,23 @@ if selected_weeks:
 else:
     df_filtered = df_month_filtered.copy()
 
+# EXPORT DATA (SIDEBAR)
+st.sidebar.markdown("---")
+st.sidebar.header("📥 Export Data")
+
+@st.cache_data
+def convert_df_to_csv(df):
+    return df.to_csv(index=False).encode('utf-8-sig')
+
+csv_data = convert_df_to_csv(df_filtered)
+
+st.sidebar.download_button(
+    label="Download Filtered Data (CSV)",
+    data=csv_data,
+    file_name="decluttering_data_export.csv",
+    mime="text/csv"
+)
+
 # ---------------------------------------------------------
 # 6. ΔΙΑΓΡΑΜΜΑ 1: NETWORK COVERAGE
 # ---------------------------------------------------------
@@ -203,10 +227,10 @@ if not df_opap.empty:
     df_opap_clean["ID"] = df_opap_clean["ID"].astype(str).str.strip()
 
     df_filtered_period = df_opap_clean.copy()
-   
+    
     if selected_months:
         df_filtered_period = df_filtered_period[df_filtered_period["MONTH"].isin(selected_months)]
-   
+    
     if selected_weeks:
         df_filtered_period = df_filtered_period[df_filtered_period["WEEK_NUM"].isin(selected_weeks)]
 
@@ -222,7 +246,7 @@ if not df_opap.empty:
         df_stores_clean = df_stores.dropna(subset=["ID"]).copy()
         df_stores_clean["ID"] = df_stores_clean["ID"].astype(str).str.strip()
         df_last_status = df_stores_clean.drop_duplicates(subset=["ID"], keep="last")
-       
+        
         df_merged = pd.merge(
             df_last_responses,
             df_last_status[["ID", "ACTIVITY"]],
@@ -238,7 +262,7 @@ if not df_opap.empty:
 
     valid_answers = ["ΝΑΙ", "ΔΕΝ ΥΠΗΡΧΕ ΠΑΛΑΙΟ-ΜΗ ΕΓΚΕΚΡΙΜΕΝΟ ΥΛΙΚΟ"]
     decluttered_ids = df_active[df_active["ANSWER"].isin(valid_answers)]["ID"].unique()
-   
+    
     decluttered_count = len(decluttered_ids)
     remaining_active = max(0, total_active_ids - decluttered_count)
     coverage_pct = (decluttered_count / total_active_ids * 100) if total_active_ids > 0 else 0
@@ -362,21 +386,147 @@ if "WEEK_NUM" in df_filtered.columns and "ANSWER" in df_filtered.columns and not
 else:
     st.info("No data available for the selected filters.")
 
+# ---------------------------------------------------------
+# 8. ΧΑΡΤΗΣ ΚΑΛΥΨΗΣ ΑΝΑ REGION (BASED ON UNIQUE STORES LIKE NETWORK COVERAGE)
+# ---------------------------------------------------------
+if "REGION" in df_filtered.columns and not df_filtered.empty:
+    st.markdown("---")
+    st.subheader("🗺️ COVERAGE MAP BY REGION")
+
+    # Πλήρες Λεξικό Συντεταγμένων για όλα τα 51 REGIONs
+    REGION_COORDINATES = {
+        "ΑΤΤΙΚΗΣ - ΑΤΤΙΚΗΣ": (37.9838, 23.7275),
+        "ΚΕΝΤΡΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ - ΣΕΡΡΩΝ": (41.0849, 23.5476),
+        "ΚΕΝΤΡΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ - ΘΕΣΣΑΛΟΝΙΚΗΣ": (40.6401, 22.9444),
+        "ΗΠΕΙΡΟΥ - ΙΩΑΝΝΙΝΩΝ": (39.6650, 20.8537),
+        "ΘΕΣΣΑΛΙΑΣ - ΛΑΡΙΣΗΣ": (39.6390, 22.4191),
+        "ΘΕΣΣΑΛΙΑΣ - ΜΑΓΝΗΣΙΑΣ": (39.3621, 22.9422),
+        "ΠΕΛΟΠΟΝΝΗΣΟΥ - ΑΡΓΟΛΙΔΟΣ": (37.5672, 22.8014),
+        "ΚΡΗΤΗΣ - ΗΡΑΚΛΕΙΟΥ": (35.3387, 25.1442),
+        "ΗΠΕΙΡΟΥ - ΑΡΤΗΣ": (39.1606, 20.9853),
+        "ΣΤΕΡΕΑΣ ΕΛΛΑΔΑΣ - ΦΘΙΩΤΙΔΟΣ": (38.8986, 22.4331),
+        "ΑΝΑΤΟΛΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ ΚΑΙ ΘΡΑΚΗΣ - ΚΑΒΑΛΑΣ": (40.9396, 24.4069),
+        "ΗΠΕΙΡΟΥ - ΘΕΣΠΡΩΤΙΑΣ": (39.5039, 20.2656),
+        "ΠΕΛΟΠΟΝΝΗΣΟΥ - ΚΟΡΙΝΘΙΑΣ": (37.9386, 22.9322),
+        "ΑΝΑΤΟΛΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ ΚΑΙ ΘΡΑΚΗΣ - ΞΑΝΘΗΣ": (41.1349, 24.8880),
+        "ΘΕΣΣΑΛΙΑΣ - ΤΡΙΚΑΛΩΝ": (39.5549, 21.7684),
+        "ΠΕΛΟΠΟΝΝΗΣΟΥ - ΑΡΚΑΔΙΑΣ": (37.5103, 22.3726),
+        "ΙΟΝΙΩΝ ΝΗΣΩΝ - ΚΕΡΚΥΡΑΣ": (39.6243, 19.9217),
+        "ΑΝΑΤΟΛΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ ΚΑΙ ΘΡΑΚΗΣ - ΔΡΑΜΑΣ": (41.1511, 24.1403),
+        "ΔΥΤΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ - ΚΟΖΑΝΗΣ": (40.3006, 21.7889),
+        "ΠΕΛΟΠΟΝΝΗΣΟΥ - ΜΕΣΣΗΝΙΑΣ": (37.0389, 22.1142),
+        "ΘΕΣΣΑΛΙΑΣ - ΚΑΡΔΙΤΣΗΣ": (39.3644, 21.9214),
+        "ΔΥΤΙΚΗΣ ΕΛΛΑΔΑΣ - ΑΧΑΪΑΣ": (38.2466, 21.7345),
+        "ΑΝΑΤΟΛΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ ΚΑΙ ΘΡΑΚΗΣ - ΕΒΡΟΥ": (40.8457, 25.8739),
+        "ΣΤΕΡΕΑΣ ΕΛΛΑΔΑΣ - ΒΟΙΩΤΙΑΣ": (38.4378, 22.8756),
+        "ΠΕΛΟΠΟΝΝΗΣΟΥ - ΛΑΚΩΝΙΑΣ": (37.0733, 22.4297),
+        "ΗΠΕΙΡΟΥ - ΠΡΕΒΕΖΗΣ": (38.9569, 20.7506),
+        "ΣΤΕΡΕΑΣ ΕΛΛΑΔΑΣ - ΕΥΒΟΙΑΣ": (38.4636, 23.5991),
+        "ΚΕΝΤΡΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ - ΗΜΑΘΙΑΣ": (40.5244, 22.2022),
+        "ΔΥΤΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ - ΦΛΩΡΙΝΗΣ": (40.7819, 21.4098),
+        "ΚΡΗΤΗΣ - ΧΑΝΙΩΝ": (35.5138, 24.0180),
+        "ΑΝΑΤΟΛΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ ΚΑΙ ΘΡΑΚΗΣ - ΡΟΔΟΠΗΣ": (41.1186, 25.4042),
+        "ΚΕΝΤΡΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ - ΚΙΛΚΙΣ": (40.9930, 22.8753),
+        "ΚΕΝΤΡΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ - ΠΕΛΛΗΣ": (40.8017, 22.0439),
+        "ΒOΡΕΙΟΥ ΑΙΓΑΙΟΥ - ΛΕΣΒΟΥ": (39.1042, 26.5550),
+        "ΚΕΝΤΡΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ - ΠΙΕΡΙΑΣ": (40.2696, 22.5061),
+        "ΚΕΝΤΡΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ - ΧΑΛΚΙΔΙΚΗΣ": (40.3783, 23.4428),
+        "ΚΡΗΤΗΣ - ΡΕΘΥΜΝΗΣ": (35.3672, 24.4739),
+        "ΔΥΤΙΚΗΣ ΕΛΛΑΔΑΣ - ΗΛΕΙΑΣ": (37.6726, 21.4402),
+        "ΔΥΤΙΚΗΣ ΕΛΛΑΔΑΣ - ΑΙΤΩΛΙΑΣ ΚΑΙ ΑΚΑΡΝΑΝΙΑΣ": (38.6247, 21.4089),
+        "ΙΟΝΙΩΝ ΝΗΣΩΝ - ΛΕΥΚΑΔΟΣ": (38.8304, 20.7044),
+        "ΒOΡΕΙΟΥ ΑΙΓΑΙΟΥ - ΧΙΟΥ": (38.3678, 26.1358),
+        "ΝOΤΙΟΥ ΑΙΓΑΙΟΥ - ΚΥΚΛΑΔΩΝ": (37.4437, 24.9422),
+        "ΔΥΤΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ - ΓΡΕΒΕΝΩΝ": (40.0839, 21.4275),
+        "ΔΥΤΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ - ΚΑΣΤΟΡΙΑΣ": (40.5216, 21.2634),
+        "ΣΤΕΡΕΑΣ ΕΛΛΑΔΑΣ - ΦΩΚΙΔΟΣ": (38.5286, 22.3769),
+        "ΝOΤΙΟΥ ΑΙΓΑΙΟΥ - ΔΩΔΕΚΑΝΗΣΟΥ": (36.4349, 28.2175),
+        "ΙOΝΙΩΝ ΝΗΣΩΝ - ΚΕΦΑΛΛΗΝΙΑΣ": (38.1772, 20.4883),
+        "ΒOΡΕΙΟΥ ΑΙΓΑΙΟΥ - ΣΑΜΟΥ": (37.7548, 26.9778),
+        "ΚΡΗΤΗΣ - ΛΑΣΙΘΙΟΥ": (35.1653, 25.7153),
+        "ΙOΝΙΩΝ ΝΗΣΩΝ - ΖΑΚΥΝΘΟΥ": (37.7870, 20.8979),
+        "ΣΤΕΡΕΑΣ ΕΛΛΑΔΑΣ - ΕΥΡΥΤΑΝΙΑΣ": (38.9122, 21.7981)
+    }
+
+    # 1. Καθαρισμός & Κράτημα της ΤΕΛΕΥΤΑΙΑΣ απάντησης ανά Unique ID (όπως στο Network Coverage)
+    df_clean_map = df_filtered.dropna(subset=["ID"]).copy()
+    df_clean_map["ID"] = df_clean_map["ID"].astype(str).str.strip()
+    
+    sort_cols = [c for c in ["WEEK_NUM", "DATE_DT"] if c in df_clean_map.columns]
+    if sort_cols:
+        df_sorted_map = df_clean_map.sort_values(by=sort_cols, ascending=True)
+    else:
+        df_sorted_map = df_clean_map.copy()
+
+    # Τελευταία κατάσταση ανά κατάστημα
+    df_last_map = df_sorted_map.drop_duplicates(subset=["ID"], keep="last")
+
+    # 2. Υπολογισμός ανά REGION για Μοναδικά Καταστήματα
+    valid_answers = ["ΝΑΙ", "ΔΕΝ ΥΠΗΡΧΕ ΠΑΛΑΙΟ-ΜΗ ΕΓΚΕΚΡΙΜΕΝΟ ΥΛΙΚΟ"]
+    
+    df_map = df_last_map.groupby("REGION").agg(
+        Total_Stores=('ID', 'nunique'),
+        Decluttered_Stores=('ANSWER', lambda x: x.isin(valid_answers).sum())
+    ).reset_index()
+
+    df_map["Coverage_%"] = (df_map["Decluttered_Stores"] / df_map["Total_Stores"] * 100).round(1)
+
+    # Αντιστοίχιση συντεταγμένων
+    df_map["lat"] = df_map["REGION"].map(lambda x: REGION_COORDINATES.get(str(x).strip(), (None, None))[0])
+    df_map["lon"] = df_map["REGION"].map(lambda x: REGION_COORDINATES.get(str(x).strip(), (None, None))[1])
+
+    # Καθαρισμός από περιοχές χωρίς συντεταγμένες ή με "-"
+    df_map_clean = df_map.dropna(subset=["lat", "lon"]).copy()
+
+    if not df_map_clean.empty:
+        fig_map = px.scatter_mapbox(
+            df_map_clean,
+            lat="lat",
+            lon="lon",
+            size="Total_Stores",
+            color="Coverage_%",
+            color_continuous_scale=["#115566", "#09A1A4", "#2FDDC0"],
+            size_max=38,
+            zoom=5.7,
+            center={"lat": 38.5, "lon": 23.7},
+            hover_name="REGION",
+            hover_data={
+                "Total_Stores": True,
+                "Decluttered_Stores": True,
+                "Coverage_%": ":.1f%",
+                "lat": False,
+                "lon": False
+            },
+            mapbox_style="carto-darkmatter"
+        )
+
+        fig_map.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white'),
+            height=550,
+            margin=dict(l=10, r=10, t=20, b=10)
+        )
+
+        st.plotly_chart(fig_map, use_container_width=True)
+    else:
+        st.info("Δεν υπάρχουν δεδομένα με έγκυρη περιοχή για τα επιλεγμένα φίλτρα.")
+
 st.markdown("---")
 
 # ---------------------------------------------------------
-# 8. ΑΝΑΖΗΤΗΣΗ STORE ID
+# 9. ΑΝΑΖΗΤΗΣΗ STORE ID
 # ---------------------------------------------------------
 st.subheader("🔍 Search Store ID")
 
 if "ID" in df_opap.columns:
     id_counts = df_opap.groupby("ID").size().to_dict()
-   
+    
     formatted_options = []
     store_map = {}
-   
+    
     sorted_ids = sorted([str(x) for x in df_opap["ID"].dropna().unique()])
-   
+    
     for sid in sorted_ids:
         count = id_counts.get(int(sid) if sid.isdigit() else sid, 0)
         label = f"{sid} — ({count} weeks)"
@@ -391,10 +541,10 @@ if "ID" in df_opap.columns:
     if selected_option != "-- Choose Store ID --":
         selected_store_id = store_map[selected_option]
         df_single_store = df_opap[df_opap["ID"].astype(str) == selected_store_id].copy()
-       
+        
         if "WEEK_NUM" in df_single_store.columns:
             df_single_store = df_single_store.sort_values(by="WEEK_NUM")
-           
+            
         total_visits = len(df_single_store)
         unique_weeks_count = df_single_store["WEEK_NUM"].nunique() if "WEEK_NUM" in df_single_store.columns else 0
 
