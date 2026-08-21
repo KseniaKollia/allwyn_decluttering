@@ -389,11 +389,10 @@ else:
 # ---------------------------------------------------------
 # 8. ΧΑΡΤΗΣ ΚΑΛΥΨΗΣ ΑΝΑ REGION (BASED ON UNIQUE STORES LIKE NETWORK COVERAGE)
 # ---------------------------------------------------------
-if "REGION" in df_filtered.columns and not df_filtered.empty:
+if "REGION" in df_opap.columns and not df_opap.empty:
     st.markdown("---")
     st.subheader("🗺️ COVERAGE MAP BY REGION")
 
-    # Πλήρες Λεξικό Συντεταγμένων για όλα τα 51 REGIONs
     REGION_COORDINATES = {
         "ΑΤΤΙΚΗΣ - ΑΤΤΙΚΗΣ": (37.9838, 23.7275),
         "ΚΕΝΤΡΙΚΗΣ ΜΑΚΕΔΟΝΙΑΣ - ΣΕΡΡΩΝ": (41.0849, 23.5476),
@@ -448,34 +447,28 @@ if "REGION" in df_filtered.columns and not df_filtered.empty:
         "ΣΤΕΡΕΑΣ ΕΛΛΑΔΑΣ - ΕΥΡΥΤΑΝΙΑΣ": (38.9122, 21.7981)
     }
 
-    # 1. Καθαρισμός & Κράτημα της ΤΕΛΕΥΤΑΙΑΣ απάντησης ανά Unique ID (όπως στο Network Coverage)
-    df_clean_map = df_filtered.dropna(subset=["ID"]).copy()
-    df_clean_map["ID"] = df_clean_map["ID"].astype(str).str.strip()
-    
-    sort_cols = [c for c in ["WEEK_NUM", "DATE_DT"] if c in df_clean_map.columns]
-    if sort_cols:
-        df_sorted_map = df_clean_map.sort_values(by=sort_cols, ascending=True)
-    else:
-        df_sorted_map = df_clean_map.copy()
-
-    # Τελευταία κατάσταση ανά κατάστημα
-    df_last_map = df_sorted_map.drop_duplicates(subset=["ID"], keep="last")
-
-    # 2. Υπολογισμός ανά REGION για Μοναδικά Καταστήματα
+    # Χρήση του df_active που έχει ήδη υπολογιστεί σωστά στο Section 6
+    # Φιλτράρισμα μόνο των έγκυρων απαντήσεων decluttering
     valid_answers = ["ΝΑΙ", "ΔΕΝ ΥΠΗΡΧΕ ΠΑΛΑΙΟ-ΜΗ ΕΓΚΕΚΡΙΜΕΝΟ ΥΛΙΚΟ"]
     
-    df_map = df_last_map.groupby("REGION").agg(
-        Total_Stores=('ID', 'nunique'),
-        Decluttered_Stores=('ANSWER', lambda x: x.isin(valid_answers).sum())
-    ).reset_index()
+    # 1. Υπολογισμός συνολικών ACTIVE καταστημάτων ανά REGION
+    df_map_total = df_active.groupby("REGION")["ID"].nunique().reset_index(name="Total_Stores")
 
+    # 2. Υπολογισμός DECLUTTERED καταστημάτων ανά REGION
+    df_decluttered_stores = df_active[df_active["ANSWER"].isin(valid_answers)]
+    df_map_decluttered = df_decluttered_stores.groupby("REGION")["ID"].nunique().reset_index(name="Decluttered_Stores")
+
+    # 3. Merge για το τελικό dataframe του χάρτη
+    df_map = pd.merge(df_map_total, df_map_decluttered, on="REGION", how="left")
+    df_map["Decluttered_Stores"] = df_map["Decluttered_Stores"].fillna(0).astype(int)
+
+    # 4. Υπολογισμός ποσοστού Coverage %
     df_map["Coverage_%"] = (df_map["Decluttered_Stores"] / df_map["Total_Stores"] * 100).round(1)
 
-    # Αντιστοίχιση συντεταγμένων
+    # 5. Αντιστοίχιση συντεταγμένων
     df_map["lat"] = df_map["REGION"].map(lambda x: REGION_COORDINATES.get(str(x).strip(), (None, None))[0])
     df_map["lon"] = df_map["REGION"].map(lambda x: REGION_COORDINATES.get(str(x).strip(), (None, None))[1])
 
-    # Καθαρισμός από περιοχές χωρίς συντεταγμένες ή με "-"
     df_map_clean = df_map.dropna(subset=["lat", "lon"]).copy()
 
     if not df_map_clean.empty:
@@ -486,6 +479,7 @@ if "REGION" in df_filtered.columns and not df_filtered.empty:
             size="Total_Stores",
             color="Coverage_%",
             color_continuous_scale=["#115566", "#09A1A4", "#2FDDC0"],
+            range_color=[0, 100],  # Σταθερό scale 0-100%
             size_max=38,
             zoom=5.7,
             center={"lat": 38.5, "lon": 23.7},
