@@ -18,6 +18,18 @@ st.markdown("""
     /* Εισαγωγή της PP Pangram Sans μέσω CDN */
     @import url('https://fonts.cdnfonts.com/css/pp-pangram-sans');
 
+    /* ΚΡΥΨΙΜΟ HEADER, GITHUB KAI MENU ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ */
+    header[data-testid="stHeader"] {
+        visibility: hidden !important;
+        height: 0px !important;
+    }
+    footer {
+        visibility: hidden !important;
+    }
+    #MainMenu {
+        visibility: hidden !important;
+    }
+
     /* Background της εφαρμογής */
     .stApp { 
         background-color: #112229; 
@@ -47,11 +59,11 @@ st.markdown("""
     .header-text-style {
         color: #2FDDC0 !important;
         font-family: 'PP Pangram Sans', 'Pangram', sans-serif !important;
-        font-weight: 500 !important; /* Πιο λεπτό πάχος */
-        font-size: 36px !important;  /* Πιο κομψό μέγεθος */
+        font-weight: 600 !important;
+        font-size: 26px !important;
         text-transform: uppercase !important;
         text-align: center !important;
-        letter-spacing: 2.5px !important; /* Μεγαλύτερο διάκενο για αέρα */
+        letter-spacing: 2px !important;
         margin: 0 !important;
         padding: 0 !important;
         display: block !important;
