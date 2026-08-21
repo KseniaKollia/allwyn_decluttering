@@ -15,8 +15,8 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    /* Εισαγωγή της γραμματοσειράς Outfit από το Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@800;900&display=swap');
+    /* Εισαγωγή της PP Pangram Sans μέσω CDN */
+    @import url('https://fonts.cdnfonts.com/css/pp-pangram-sans');
 
     /* Background της εφαρμογής */
     .stApp { 
@@ -43,13 +43,13 @@ st.markdown("""
         border: 1px solid #2FDDC0 !important;
     }
 
-    /* ΤΙΤΛΟΣ ΜΕ ΓΡΑΜΜΑΤΟΣΕΙΡΑ ΤΥΠΟΥ ALLWYN */
+    /* ΤΙΤΛΟΣ ΜΕ PP PANGRAM SANS */
     .header-text-style {
         color: #FFFFFF !important;
-        font-family: 'Outfit', sans-serif !important;
+        font-family: 'PP Pangram Sans', 'Pangram', sans-serif !important;
         font-weight: 900 !important;
         font-size: 38px !important;
-        text-transform: uppercase !important; /* Κάνει τους χαρακτήρες κεφαλαίους όπως το brand */
+        text-transform: uppercase !important;
         text-align: center !important;
         letter-spacing: 1px !important;
         margin: 0 !important;
