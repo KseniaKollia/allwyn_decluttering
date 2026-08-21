@@ -522,7 +522,7 @@ if "REGION" in df_opap.columns and not df_opap.empty:
             lat="lat",
             lon="lon",
             size="Total_Stores",
-            color="Coverage_%",
+            color="Coverage %",
             color_continuous_scale=["#115566", "#09A1A4", "#2FDDC0"],
             range_color=[0, 100],  # Σταθερό scale 0-100%
             size_max=38,
@@ -532,7 +532,7 @@ if "REGION" in df_opap.columns and not df_opap.empty:
             hover_data={
                 "Total_Stores": True,
                 "Decluttered_Stores": True,
-                "Coverage_%": ":.1f%",
+                "Coverage %": ":.1f%",
                 "lat": False,
                 "lon": False
             },
