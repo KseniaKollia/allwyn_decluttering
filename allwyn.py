@@ -211,7 +211,7 @@ def convert_df_to_csv(df):
 csv_data = convert_df_to_csv(df_filtered)
 
 st.sidebar.download_button(
-    label="Download Filtered Data (CSV)",
+    label="Download Data (CSV)",
     data=csv_data,
     file_name="decluttering_data_export.csv",
     mime="text/csv"
@@ -507,7 +507,7 @@ if "REGION" in df_opap.columns and not df_opap.empty:
     df_map["Decluttered_Stores"] = df_map["Decluttered_Stores"].fillna(0).astype(int)
 
     # 4. Υπολογισμός ποσοστού Coverage %
-    df_map["Coverage_%"] = (df_map["Decluttered_Stores"] / df_map["Total_Stores"] * 100).round(1)
+    df_map["Coverage %"] = (df_map["Decluttered_Stores"] / df_map["Total_Stores"] * 100).round(1)
 
     # 5. Αντιστοίχιση συντεταγμένων
     df_map["lat"] = df_map["REGION"].map(lambda x: REGION_COORDINATES.get(str(x).strip(), (None, None))[0])
