@@ -48,7 +48,7 @@ st.markdown("""
         color: #FFFFFF !important;
         font-family: 'PP Pangram Sans', 'Pangram', sans-serif !important;
         font-weight: 500 !important; /* Πιο λεπτό πάχος */
-        font-size: 26px !important;  /* Πιο κομψό μέγεθος */
+        font-size: 36px !important;  /* Πιο κομψό μέγεθος */
         text-transform: uppercase !important;
         text-align: center !important;
         letter-spacing: 2.5px !important; /* Μεγαλύτερο διάκενο για αέρα */
